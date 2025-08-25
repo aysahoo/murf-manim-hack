@@ -9,7 +9,10 @@ const page = () => {
         <header className="px-8 py-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-medium text-gray-800">Mona</h2>
-            <button className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center transition-colors cursor-pointer">
+            <a
+              href="/explain"
+              className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center transition-colors hover:bg-gray-800 cursor-pointer"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"
@@ -23,7 +26,7 @@ const page = () => {
               >
                 <path d="M12 5v14M5 12h14" />
               </svg>
-            </button>
+            </a>
           </div>
         </header>
 

@@ -1,0 +1,91 @@
+"use client";
+
+import React from "react";
+import { motion } from "motion/react";
+import TypewriterText from "./TypewriterText";
+
+type ConceptInputFormProps = {
+  inputValue: string;
+  isFocused: boolean;
+  onChange: (value: string) => void;
+  onFocus: (focused: boolean) => void;
+  onSubmit: () => void;
+};
+
+const ConceptInputForm: React.FC<ConceptInputFormProps> = ({
+  inputValue,
+  isFocused,
+  onChange,
+  onFocus,
+  onSubmit,
+}) => {
+  const isValid = inputValue.trim().length > 0;
+
+  return (
+    <motion.div
+      className="py-16 md:py-24 w-full"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
+      <motion.div
+        className="text-3xl md:text-5xl lg:text-6xl font-serif font-medium text-gray-900 tracking-tight text-center w-full mb-8"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+      >
+        Write the concept you want to understand
+      </motion.div>
+      <div className="relative w-full min-h-[1em]">
+        <input
+          type="text"
+          value={inputValue}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => onFocus(true)}
+          onBlur={() => onFocus(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && isValid) {
+              onSubmit();
+            }
+          }}
+          className="text-3xl md:text-5xl lg:text-6xl font-serif font-medium text-gray-900 tracking-tight bg-transparent border-none outline-none text-center w-full relative z-10"
+          style={{ caretColor: "rgb(17 24 39)" }}
+        />
+        {inputValue === "" && !isFocused && (
+          <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
+            <TypewriterText />
+          </div>
+        )}
+      </div>
+      <div className="flex justify-center mt-8">
+        <motion.button
+          onClick={() => isValid && onSubmit()}
+          className={`w-14 h-14 backdrop-blur-sm text-gray-700 rounded-full flex items-center justify-center transition-all duration-300 disabled:cursor-not-allowed ${
+            isFocused ? "bg-gray-500/30" : "bg-gray-500/10"
+          } ${isValid ? "hover:bg-gray-500/40" : ""}`}
+          disabled={!isValid}
+          whileHover={{ scale: isValid ? 1.05 : 1 }}
+          whileTap={{ scale: isValid ? 0.95 : 1 }}
+          initial={{ opacity: 0.3 }}
+          animate={{ opacity: isFocused ? 1 : 0.3 }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M5 12h14m-7-7l7 7-7 7" />
+          </svg>
+        </motion.button>
+      </div>
+    </motion.div>
+  );
+};
+
+export default ConceptInputForm;
