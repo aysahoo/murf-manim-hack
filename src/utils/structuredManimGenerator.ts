@@ -37,20 +37,21 @@ Requirements:
 - Use MathTex for mathematical expressions, not Tex
 - Use proper Manim syntax (no .label() method on Line objects)
 - Follow PEP 8 standards
-- Include proper error handling where applicable
-- Make the code immediately executable
+- Make the code immediately executable without rendering (just import and class definition)
 - Add comments explaining each animation step
 - Use appropriate Manim objects and animations
+- IMPORTANT: Do not include any render commands or scene execution at the end
+- IMPORTANT: Just define the Scene class, do not instantiate or run it
 
 The animation should:
 1. Clearly explain the mathematical concept
-2. Use visual elements effectively
+2. Use visual elements effectively  
 3. Progress logically through the explanation
 4. Be educational and engaging
 
 Topic: ${topic}
 
-Generate complete, runnable Manim code with proper Python syntax.`
+Generate complete, runnable Manim code with proper Python syntax but WITHOUT execution.`
     });
 
     return object.complete_script;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateStructuredManimCode, validateAndFixManimCode } from '@/utils/structuredManimGenerator';
 import {convertEscapedNewlines} from '@/utils/formatManimCode';
+import { executeCodeAndListFiles } from '@/utils/sandbox'
 export async function POST(request: NextRequest) {
   try {
     const { topic } = await request.json();
@@ -17,10 +18,17 @@ export async function POST(request: NextRequest) {
     const validatedCode = validateAndFixManimCode(manimCode);
     const multilineCode = convertEscapedNewlines(validatedCode);
 
+    // Execute the generated Manim code in the sandbox and list files
+    console.log('Executing Manim code in sandbox...');
+    const result = await executeCodeAndListFiles(multilineCode);
+
     return NextResponse.json({
       topic,
       manimCode: multilineCode,
-      generationMethod: 'structured'
+      generationMethod: 'structured',
+      execution: result.execution,
+      sandboxFiles: result.files,
+      success: result.success
     });
 
   } catch (error) {
