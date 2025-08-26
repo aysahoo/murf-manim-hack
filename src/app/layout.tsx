@@ -7,6 +7,14 @@ const instrumentSerif = Instrument_Serif({
   variable: "--font-instrument-serif",
 });
 
+export const metadata = {
+  title: "Mona",
+  description: "Mona - AI-powered explanations",
+  icons: {
+    icon: "/heart-favicon.svg",
+  },
+};
+
 export default function RootLayout({
   children,
 }: {

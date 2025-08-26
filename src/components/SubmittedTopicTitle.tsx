@@ -10,7 +10,7 @@ type SubmittedTopicTitleProps = {
 const SubmittedTopicTitle: React.FC<SubmittedTopicTitleProps> = ({ topic }) => {
   return (
     <motion.div
-      className="flex justify-center pt-16"
+      className="flex justify-center"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: "easeOut" }}

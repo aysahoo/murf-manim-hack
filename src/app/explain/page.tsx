@@ -26,7 +26,8 @@ const page = () => {
               onSubmit={() => {
                 const trimmed = inputValue.trim();
                 if (trimmed) {
-                  router.push(`/explain/${encodeURIComponent(trimmed)}`);
+                  // Redirect to loading screen with topic in query params
+                  router.push(`/loading?topic=${encodeURIComponent(trimmed)}`);
                 }
               }}
             />
