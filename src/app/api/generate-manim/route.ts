@@ -17,7 +17,8 @@ export async function POST(request: NextRequest) {
     const manimCode = await generateStructuredManimCode(topic);
     const validatedCode = validateAndFixManimCode(manimCode);
     const multilineCode = convertEscapedNewlines(validatedCode);
-
+    //generated Manim Code
+    console.log(multilineCode);
     // Execute the generated Manim code in the sandbox and list files
     console.log('Executing Manim code in sandbox...');
     const result = await executeCodeAndListFiles(multilineCode);
