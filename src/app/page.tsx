@@ -59,7 +59,7 @@ const page = () => {
             </h1>
 
             {/* Service Cards */}
-            <div className="flex flex-wrap gap-4 mt-10 md:mt-16">
+            <div className="flex flex-wrap gap-4 mt-10">
               <div className="bg-blue-100/40 px-4 py-2 rounded-full">
                 <span className="text-sm md:text-base text-gray-800">
                   Concept Explanation
