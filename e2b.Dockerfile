@@ -18,7 +18,6 @@ RUN apt-get update && apt-get install -y \
     texlive-fonts-extra \
     texlive-latex-recommended \
     texlive-science \
-    texlive-fonts-extra \
     git \
     && rm -rf /var/lib/apt/lists/*
 

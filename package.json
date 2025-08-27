@@ -12,6 +12,7 @@
     "@ai-sdk/google": "^2.0.8",
     "@ai-sdk/openai": "^2.0.20",
     "@e2b/code-interpreter": "^2.0.0",
+    "@openrouter/ai-sdk-provider": "^1.1.2",
     "@paper-design/shaders-react": "^0.0.46",
     "ai": "^5.0.23",
     "e2b": "^2.0.1",
