@@ -97,9 +97,11 @@ export async function executeCode(code: string) {
     
     // Extract scene class name for targeted rendering
     const sceneClassName = extractSceneClassName(code);
+    // Use -qm (medium quality) instead of -pql (preview low quality) to get better videos
+    // Removed -p flag to prevent preview popup and potential render issues
     const command = sceneClassName 
-      ? `cd /code && manim -pql ${filename} ${sceneClassName}`
-      : `cd /code && manim -pql ${filename}`;
+      ? `cd /code && manim -qm ${filename} ${sceneClassName}`
+      : `cd /code && manim -qm ${filename}`;
     
     console.log(`Running command: ${command}`);
     const result = await sbx.commands.run(command);
@@ -187,20 +189,96 @@ export async function executeCodeAndListFiles(code: string) {
     // Extract scene class name for targeted rendering
     const sceneClassName = extractSceneClassName(code);
     console.log(`Extracted scene class name: ${sceneClassName}`);
+    // Use -qm (medium quality) instead of -pql (preview low quality) to get better videos
+    // Removed -p flag to prevent preview popup and potential render issues
     const command = sceneClassName 
-      ? `cd /code && manim -pql ${filename} ${sceneClassName}`
-      : `cd /code && manim -pql ${filename}`;
+      ? `cd /code && manim -qm ${filename} ${sceneClassName}`
+      : `cd /code && manim -qm ${filename}`;
     
     console.log(`Running command: ${command}`);
     // Run the Manim command to generate animations
     const result = await sbx.commands.run(command);
     console.log(`Manim command executed`);
+    
     // List files after execution
     let files: any[] = [];
+    let extractedVideos: { path: string, size: number }[] = [];
+    
     try {
+      // List files in /code directory
       files = await sbx.files.list('/code');
+      
+      // Find the media directory
+      const mediaDir = files.find(file => file.name === 'media' && file.type === 'dir');
+      if (mediaDir) {
+        // List files in the media/videos directory
+        const videosPath = '/code/media/videos';
+        const videosDirContent = await sbx.files.list(videosPath);
+        
+        // Find the most recent video directory (they're named with timestamps)
+        const videoDirectories = videosDirContent
+          .filter(item => item.type === 'dir')
+          .sort((a, b) => {
+            const dateA = a.modifiedTime ? new Date(a.modifiedTime).getTime() : 0;
+            const dateB = b.modifiedTime ? new Date(b.modifiedTime).getTime() : 0;
+            return dateB - dateA;
+          });
+        
+        if (videoDirectories.length > 0) {
+          const recentVideoDir = videoDirectories[0];
+          const qualityDirs = await sbx.files.list(`${videosPath}/${recentVideoDir.name}`);
+          
+          // Quality directories usually named like "480p15"
+          for (const qualityDir of qualityDirs) {
+            if (qualityDir.type === 'dir') {
+              const videoFiles = await sbx.files.list(`${videosPath}/${recentVideoDir.name}/${qualityDir.name}`);
+              
+              // Find MP4 files
+              const mp4Files = videoFiles.filter(file => 
+                file.type === 'file' && 
+                file.name.endsWith('.mp4') && 
+                !file.name.includes('partial_movie_files')
+              );
+              
+              // Download each video file
+              for (const videoFile of mp4Files) {
+                const videoFilePath = `${videosPath}/${recentVideoDir.name}/${qualityDir.name}/${videoFile.name}`;
+                console.log(`Found video file: ${videoFilePath}`);
+                
+                try {
+                  // Download the file content
+                  const fileContent = await sbx.files.read(videoFilePath);
+                  
+                  // Save to local storage
+                  const fs = require('fs');
+                  const path = require('path');
+                  
+                  // Create directories if they don't exist
+                  const localDir = path.join(process.cwd(), 'public', 'videos');
+                  if (!fs.existsSync(localDir)) {
+                    fs.mkdirSync(localDir, { recursive: true });
+                  }
+                  
+                  const localFilePath = path.join(localDir, videoFile.name);
+                  fs.writeFileSync(localFilePath, fileContent);
+                  
+                  console.log(`Saved video file locally to: /public/videos/${videoFile.name}`);
+                  
+                  // Add to the list of extracted files
+                  extractedVideos.push({
+                    path: videoFilePath,
+                    size: fileContent.length
+                  });
+                } catch (downloadError) {
+                  console.error(`Error downloading video file: ${videoFilePath}`, downloadError);
+                }
+              }
+            }
+          }
+        }
+      }
     } catch (fileError) {
-      console.warn('Could not list files:', fileError);
+      console.warn('Could not list or download files:', fileError);
     }
     
     return {
@@ -210,7 +288,11 @@ export async function executeCodeAndListFiles(code: string) {
         error: result.exitCode !== 0 ? result.stderr : null,
         results: []
       },
-      files
+      files,
+      videoFiles: extractedVideos.map(vf => ({ 
+        path: vf.path.replace('/code/', ''),
+        size: vf.size
+      }))
     };
   } catch (error) {
     return {
@@ -221,10 +303,11 @@ export async function executeCodeAndListFiles(code: string) {
         error: error instanceof Error ? error.message : 'Unknown error occurred',
         results: []
       },
-      files: []
+      files: [],
+      videoFiles: []
     };
   } finally {
-    // Clean up sandbox
+    // Clean up sandbox only after we've extracted all necessary files
     if (sbx) {
       try {
         await sbx.kill();
