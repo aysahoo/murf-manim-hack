@@ -26,7 +26,10 @@ const CounterAnimation = ({ onComplete }: { onComplete: () => void }) => {
         // If counter reaches 100%, trigger the onComplete callback
         if (newCount >= 100) {
           clearInterval(timer);
-          onComplete();
+          // Defer the callback to avoid setState during render
+          setTimeout(() => {
+            onComplete();
+          }, 0);
           return 100;
         }
         return newCount;
@@ -115,11 +118,6 @@ const LoadingPage = () => {
         <main className="flex-1 flex flex-col w-full">
           <div className="flex-1 flex flex-col justify-center items-center w-full">
             <div className="text-center space-y-8">
-              {/* Animated Heart */}
-              <div className="mb-8">
-                <AnimatedHeart />
-              </div>
-
               {/* Counter animation */}
               <CounterAnimation onComplete={handleComplete} />
             </div>
