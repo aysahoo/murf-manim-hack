@@ -30,15 +30,6 @@ interface GenerateLessonResponse {
   totalLessons: number;
   success: boolean;
 }
-import { NextRequest, NextResponse } from "next/server";
-import { generateLessonBreakdown } from "@/utils/lessonBreakdown";
-import { blobStorage } from "@/utils/blobStorage";
-import { executeCodeAndListFiles } from "@/utils/sandbox";
-import { generateVoiceNarration } from "@/utils/voiceNarration";
-import { validateAndFixManimCode } from "@/utils/structuredManimGenerator";
-import { convertEscapedNewlines } from "@/utils/formatManimCode";
-import path from "path";
-import fs from "fs";
 
 // Request deduplication - prevent multiple simultaneous requests for same topic
 const activeRequests = new Map<string, Promise<GenerateLessonResponse>>();
@@ -49,7 +40,6 @@ interface LessonResponse {
   video_url?: string;
   audio_url?: string;
 }
-const activeRequests = new Map<string, Promise<LessonResponse[]>>();
 
 export async function POST(request: NextRequest) {
   try {
