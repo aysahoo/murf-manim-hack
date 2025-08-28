@@ -72,6 +72,7 @@ class BlobStorage {
       const blob = await put(blobKey, JSON.stringify(data, null, 2), {
         access: "public",
         contentType: "application/json",
+        addRandomSuffix: true,
       });
 
       console.log(`Stored Manim code for topic: ${topic} at ${blob.url}`);
@@ -117,6 +118,7 @@ class BlobStorage {
       const blob = await put(blobKey, JSON.stringify(scriptData, null, 2), {
         access: "public",
         contentType: "application/json",
+        addRandomSuffix: true,
       });
 
       console.log(`Stored voice script for topic: ${topic} at ${blob.url}`);
@@ -162,6 +164,7 @@ class BlobStorage {
       const blob = await put(blobKey, JSON.stringify(breakdownData, null, 2), {
         access: "public",
         contentType: "application/json",
+        addRandomSuffix: true,
       });
 
       console.log(`Stored lesson breakdown for topic: ${topic} at ${blob.url}`);
