@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import ShaderBackground from "../../../components/ShaderBackground";
 import SubmittedTopicTitle from "../../../components/SubmittedTopicTitle";
@@ -15,7 +15,7 @@ interface Lesson {
   manim_code: string;
 }
 
-const TopicPage = () => {
+const TopicPageContent = () => {
   const params = useParams<{ topic: string }>();
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") || "single";
@@ -275,6 +275,26 @@ const TopicPage = () => {
         <Footer />
       </div>
     </ShaderBackground>
+  );
+};
+
+const TopicPage = () => {
+  return (
+    <Suspense fallback={
+      <ShaderBackground>
+        <div className="relative z-10 min-h-screen flex flex-col">
+          <Navbar />
+          <main className="flex-1 flex flex-col justify-center items-center w-full">
+            <div className="text-center space-y-8">
+              <div className="text-2xl text-gray-900">Loading...</div>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </ShaderBackground>
+    }>
+      <TopicPageContent />
+    </Suspense>
   );
 };
 

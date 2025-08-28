@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { motion } from "motion/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ShaderBackground from "../../components/ShaderBackground";
@@ -204,7 +204,7 @@ const AnimatedHeart = () => {
   );
 };
 
-const LoadingPage = () => {
+const LoadingPageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const topic = searchParams.get("topic");
@@ -291,6 +291,33 @@ const LoadingPage = () => {
         </main>
       </div>
     </ShaderBackground>
+  );
+};
+
+const LoadingPage = () => {
+  return (
+    <Suspense fallback={
+      <ShaderBackground>
+        <div className="relative z-10 min-h-screen flex flex-col">
+          <Navbar />
+          <main className="flex-1 flex flex-col justify-center items-center w-full">
+            <div className="text-center space-y-8">
+              <motion.h1
+                className="text-6xl text-gray-900 h-20 flex items-center justify-center"
+                style={{ fontFamily: "var(--font-instrument-serif)" }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+              >
+                Loading...
+              </motion.h1>
+            </div>
+          </main>
+        </div>
+      </ShaderBackground>
+    }>
+      <LoadingPageContent />
+    </Suspense>
   );
 };
 
