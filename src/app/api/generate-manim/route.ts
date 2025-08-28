@@ -7,7 +7,6 @@ import { convertEscapedNewlines } from "@/utils/formatManimCode";
 import { executeCodeAndListFiles } from "@/utils/sandbox";
 import { generateVoiceNarration } from "@/utils/voiceNarration";
 // Removed cache import - now using blob storage directly
-import path from "path";
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,13 +28,10 @@ export async function POST(request: NextRequest) {
     console.log("Executing Manim code in sandbox...");
     const result = await executeCodeAndListFiles(multilineCode);
 
-    // Generate publicly accessible video URLs for the extracted videos
+    // Use blob URLs for the extracted videos (they're already public URLs)
     let videoUrls: string[] = [];
     if (result.videoFiles && result.videoFiles.length > 0) {
-      videoUrls = result.videoFiles.map((videoFile) => {
-        const fileName = path.basename(videoFile.path);
-        return `/videos/${fileName}`;
-      });
+      videoUrls = result.videoFiles.map((videoFile) => videoFile.path); // videoFile.path is now a blob URL
     }
 
     // Generate Murf AI voice narration if requested
@@ -48,7 +44,16 @@ export async function POST(request: NextRequest) {
           multilineCode,
           voiceOptions
         );
-        console.log("Murf AI voice generation successful:", voiceData.audioUrl);
+        if (voiceData.audioUrl) {
+          console.log(
+            "Murf AI voice generation successful:",
+            voiceData.audioUrl
+          );
+        } else {
+          console.log(
+            "Murf AI voice generation skipped (API key not configured), using fallback script data"
+          );
+        }
       } catch (error) {
         console.error("Murf AI voice generation failed:", error);
         console.log(

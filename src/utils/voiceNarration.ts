@@ -1,12 +1,7 @@
-import { generateObject } from "ai";
-import { google } from "@ai-sdk/google";
 import axios from "axios";
 import fs from "fs";
 import path from "path";
-import { z } from "zod";
 import { blobStorage } from "./blobStorage";
-
-const MURF_API_KEY = process.env.MURF_API_KEY;
 
 // Fallback voice scripts when Gemini API is down
 function getFallbackVoiceScript(topic: string) {
@@ -231,32 +226,6 @@ function getFallbackVoiceScript(topic: string) {
   };
 }
 
-// Schema for voice narration script generation
-const narrationScriptSchema = z.object({
-  script: z
-    .string()
-    .describe("The complete narration script that explains the animation"),
-  segments: z
-    .array(
-      z.object({
-        text: z.string().describe("Text segment for voice synthesis"),
-        duration: z
-          .number()
-          .describe("Estimated duration in seconds for this segment"),
-        timestamp: z
-          .number()
-          .describe("Start time in the video when this segment should begin"),
-      })
-    )
-    .describe("Timed segments for synchronization with video"),
-  voiceStyle: z
-    .string()
-    .describe(
-      "Recommended voice style (e.g., 'professional', 'educational', 'enthusiastic')"
-    ),
-  speakingRate: z.number().describe("Speaking rate multiplier (0.5-2.0)"),
-});
-
 /**
  * Configuration for Murf AI API
  */
@@ -269,12 +238,9 @@ const MURF_API_CONFIG = {
 };
 
 /**
- * Generates a narration script using Gemini AI based on the Manim code and topic
+ * Generates a narration script using fallback templates based on the topic
  */
-export async function generateNarrationScript(
-  topic: string,
-  manimCode: string
-): Promise<{
+export async function generateNarrationScript(topic: string): Promise<{
   script: string;
   segments: Array<{ text: string; duration: number; timestamp: number }>;
   voiceStyle: string;
@@ -373,9 +339,11 @@ export async function textToSpeech(
       !MURF_API_CONFIG.apiKey ||
       MURF_API_CONFIG.apiKey === "your_murf_api_key_here"
     ) {
-      throw new Error(
-        "Murf API key not configured. Please set MURF_API_KEY environment variable with your actual API key from https://studio.murf.ai/"
-      );
+      console.warn("Murf API key not configured, skipping voice generation");
+      return {
+        audioData: Buffer.from(""), // Return empty buffer to indicate fallback should be used
+        audioUrl: undefined,
+      };
     }
 
     const response = await axios.post(
@@ -448,7 +416,7 @@ export async function generateVoiceNarration(
     speakingRate?: number;
   }
 ): Promise<{
-  audioUrl: string;
+  audioUrl: string | null;
   script: string;
   segments: Array<{ text: string; duration: number; timestamp: number }>;
 }> {
@@ -462,7 +430,7 @@ export async function generateVoiceNarration(
       scriptOrManimCode.includes("class ")
     ) {
       // This is Manim code, generate narration script
-      narrationData = await generateNarrationScript(topic, scriptOrManimCode);
+      narrationData = await generateNarrationScript(topic);
       fullScript = narrationData.segments
         .map((segment) => segment.text)
         .join(" ");
@@ -489,6 +457,16 @@ export async function generateVoiceNarration(
       style: voiceOptions?.style || narrationData.voiceStyle,
       speakingRate: voiceOptions?.speakingRate || narrationData.speakingRate,
     });
+
+    // Check if API key is configured (audioData will be empty if not)
+    if (audioResult.audioData.length === 0) {
+      console.log("Murf API key not configured, using fallback voice data");
+      return {
+        audioUrl: null, // Indicate no audio URL available
+        script: narrationData.script,
+        segments: narrationData.segments,
+      };
+    }
 
     // Save audio file
     const safeTopic = topic.toLowerCase().replace(/[^a-z0-9]/g, "_");

@@ -20,6 +20,13 @@ interface LessonBreakdownData {
   }>;
 }
 
+interface VideoFileData {
+  filename: string;
+  url: string;
+  size: number;
+  contentType: string;
+}
+
 class BlobStorage {
   private blobStorePrefix: string;
 
@@ -28,11 +35,12 @@ class BlobStorage {
   }
 
   private getBlobKey(
-    type: "manim" | "voice" | "lesson",
-    topic: string
+    type: "manim" | "voice" | "lesson" | "video",
+    topic: string,
+    extension: string = "json"
   ): string {
     const safeTopic = topic.toLowerCase().replace(/[^a-z0-9]/g, "_");
-    return `${this.blobStorePrefix}${type}_${safeTopic}.json`;
+    return `${this.blobStorePrefix}${type}_${safeTopic}.${extension}`;
   }
 
   // Manim Code Storage
@@ -175,6 +183,57 @@ class BlobStorage {
     }
   }
 
+  // Video File Storage
+  async storeVideoFile(
+    topic: string,
+    videoBuffer: Buffer,
+    filename: string
+  ): Promise<VideoFileData> {
+    try {
+      const safeTopic = topic.toLowerCase().replace(/[^a-z0-9]/g, "_");
+      const timestamp = Date.now();
+      const videoFilename = `${safeTopic}_${timestamp}_${filename}`;
+
+      const blob = await put(`videos/${videoFilename}`, videoBuffer, {
+        access: "public",
+        contentType: "video/mp4",
+        addRandomSuffix: false,
+      });
+
+      const videoData: VideoFileData = {
+        filename: videoFilename,
+        url: blob.url,
+        size: videoBuffer.length,
+        contentType: "video/mp4",
+      };
+
+      console.log(`Stored video file for topic: ${topic} at ${blob.url}`);
+      return videoData;
+    } catch (error) {
+      console.error("Error storing video file to blob:", error);
+      throw error;
+    }
+  }
+
+  async getVideoFiles(topic: string): Promise<VideoFileData[]> {
+    try {
+      const safeTopic = topic.toLowerCase().replace(/[^a-z0-9]/g, "_");
+      const { blobs } = await list({ prefix: `videos/${safeTopic}` });
+
+      const videoFiles: VideoFileData[] = blobs.map((blob) => ({
+        filename: blob.pathname.split("/").pop() || "",
+        url: blob.url,
+        size: blob.size,
+        contentType: blob.contentType || "video/mp4",
+      }));
+
+      return videoFiles;
+    } catch (error) {
+      console.error("Error retrieving video files from blob:", error);
+      return [];
+    }
+  }
+
   // General storage operations
   async listAllData(): Promise<
     Array<{ key: string; url: string; size: number }>
@@ -231,4 +290,9 @@ class BlobStorage {
 export const blobStorage = new BlobStorage();
 
 // Export types for use in other modules
-export type { ManimCodeData, VoiceScriptData, LessonBreakdownData };
+export type {
+  ManimCodeData,
+  VoiceScriptData,
+  LessonBreakdownData,
+  VideoFileData,
+};
