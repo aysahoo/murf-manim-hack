@@ -33,20 +33,31 @@ const LessonBreakdown: React.FC<LessonBreakdownProps> = ({
     // Auto-advance to next lesson when current one finishes
     if (currentLesson < lessons.length) {
       setTimeout(() => {
-        console.log(`Moving from lesson ${currentLesson} to ${currentLesson + 1}`);
+        console.log(
+          `Moving from lesson ${currentLesson} to ${currentLesson + 1}`
+        );
         setCurrentLesson(currentLesson + 1);
         setAutoPlay(true); // Auto-play next lesson
       }, 2000); // 2 second delay between lessons for smooth transition
     } else {
-      console.log('All lessons completed!');
+      console.log("All lessons completed!");
     }
   };
 
   const getCurrentLesson = () => {
-    return lessons.find(lesson => lesson.part === currentLesson) || lessons[0];
+    return (
+      lessons.find((lesson) => lesson.part === currentLesson) || lessons[0]
+    );
   };
 
   const currentLessonData = getCurrentLesson();
+
+  // Debug logging
+  console.log(`Current lesson ${currentLesson} data:`, currentLessonData);
+  console.log(
+    `Video URL for lesson ${currentLesson}:`,
+    currentLessonData?.videoUrl
+  );
 
   return (
     <div className={`max-w-5xl mx-auto ${className}`}>
@@ -92,15 +103,11 @@ const LessonBreakdown: React.FC<LessonBreakdownProps> = ({
             <VideoWithAudio
               videoUrl={currentLessonData.videoUrl}
               audioUrl={currentLessonData.audioUrl}
-              script={currentLessonData.voiceScript || currentLessonData.script}
               className="w-full rounded-xl"
               autoPlay={autoPlay}
-              muted={false}
               onEnded={handleLessonComplete}
             />
           )}
-          
-
         </div>
       </motion.div>
 
@@ -122,8 +129,18 @@ const LessonBreakdown: React.FC<LessonBreakdownProps> = ({
             disabled={currentLesson === 1}
             className="flex items-center px-6 py-3 bg-black/70 backdrop-blur-sm text-white rounded-2xl hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 border border-white/20"
           >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg
+              className="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             Back
           </button>
@@ -158,14 +175,22 @@ const LessonBreakdown: React.FC<LessonBreakdownProps> = ({
             className="flex items-center px-6 py-3 bg-black/70 backdrop-blur-sm text-white rounded-2xl hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 border border-white/20"
           >
             Next
-            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg
+              className="w-5 h-5 ml-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </button>
         </div>
       </motion.div>
-
-
     </div>
   );
 };

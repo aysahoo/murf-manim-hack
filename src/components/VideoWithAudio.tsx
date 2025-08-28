@@ -5,26 +5,16 @@ import React, { useRef, useEffect, useState } from "react";
 interface VideoWithAudioProps {
   videoUrl: string;
   audioUrl?: string;
-  script?: string;
-  segments?: Array<{
-    text: string;
-    duration: number;
-    timestamp: number;
-  }>;
   className?: string;
   autoPlay?: boolean;
-  muted?: boolean;
   onEnded?: () => void;
 }
 
 const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
   videoUrl,
   audioUrl,
-  script,
-  segments = [],
   className = "",
   autoPlay = false,
-  muted = false,
   onEnded,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -32,7 +22,6 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoError, setVideoError] = useState(false);
 
-  const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [showControls, setShowControls] = useState(false);
@@ -83,8 +72,6 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
 
       // If we have audio, use audio time as the primary time source
       if (audio && audioUrl && isPlaying && !audio.paused && !audio.ended) {
-        setCurrentTime(audio.currentTime);
-
         // Keep video in sync by looping it when audio goes beyond video length
         if (audio.currentTime > duration && duration > 0) {
           const videoPosition = audio.currentTime % duration;
@@ -111,7 +98,7 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
         }
       } else {
         // No audio or audio not playing, use video time
-        setCurrentTime(video.currentTime);
+        // currentTime not needed for this implementation
       }
     };
 
@@ -132,7 +119,7 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
       video.removeEventListener("timeupdate", handleTimeUpdate);
       video.removeEventListener("loadedmetadata", handleLoadedMetadata);
     };
-  }, [audioUrl, isPlaying, duration]); // Add dependencies for proper sync
+  }, [audioUrl, isPlaying, duration, onEnded]); // Add dependencies for proper sync
 
   // Handle autoplay (with user interaction requirement)
   useEffect(() => {
@@ -167,7 +154,7 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
             console.log("✅ Autoplay successful (video only)");
           }
           setIsPlaying(true);
-        } catch (error) {
+        } catch {
           console.log(
             "🔒 Autoplay blocked - user interaction required. Click play to start."
           );
@@ -230,30 +217,6 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
     }
   };
 
-  const handleSeek = (newTime: number) => {
-    const video = videoRef.current;
-    const audio = audioRef.current;
-    if (!video) return;
-
-    // Use the maximum duration (audio or video)
-    const maxDuration = audioDuration > duration ? audioDuration : duration;
-    const clampedTime = Math.max(0, Math.min(newTime, maxDuration));
-
-    // If seeking beyond video length, loop the video to the appropriate position
-    if (clampedTime > duration && duration > 0) {
-      const videoPosition = clampedTime % duration;
-      video.currentTime = videoPosition;
-    } else {
-      video.currentTime = clampedTime;
-    }
-
-    setCurrentTime(clampedTime);
-
-    if (audio && audioUrl) {
-      audio.currentTime = clampedTime;
-    }
-  };
-
   const changeSpeed = (speed: number) => {
     const video = videoRef.current;
     const audio = audioRef.current;
@@ -264,12 +227,6 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
     if (audio && audioUrl) {
       audio.playbackRate = speed;
     }
-  };
-
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
   const toggleFullscreen = () => {
@@ -306,6 +263,7 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
             preload="metadata"
             width="100%"
             height="auto"
+            crossOrigin="anonymous"
             style={{
               minHeight: className?.includes("h-full") ? "auto" : "300px",
             }}

@@ -13,6 +13,10 @@ interface Lesson {
   part: number;
   script: string;
   manim_code: string;
+  videoUrl?: string;
+  audioUrl?: string;
+  voiceScript?: string;
+  executionSuccess?: boolean;
 }
 
 const TopicPageContent = () => {
@@ -23,12 +27,6 @@ const TopicPageContent = () => {
   // Single video mode state
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [voiceScript, setVoiceScript] = useState<string | null>(null);
-  const [voiceSegments, setVoiceSegments] = useState<Array<{
-    text: string;
-    duration: number;
-    timestamp: number;
-  }> | null>(null);
 
   // Lesson mode state
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -75,8 +73,6 @@ const TopicPageContent = () => {
 
           setVideoUrl(data.videoUrl);
           setAudioUrl(data.audioUrl);
-          setVoiceScript(data.script);
-          setVoiceSegments(data.segments);
           setLoading(false);
 
           // Clear the stored data
@@ -107,6 +103,11 @@ const TopicPageContent = () => {
           console.log("Lesson API response:", data);
 
           if (data && data.lessons && Array.isArray(data.lessons)) {
+            console.log("Setting lessons data:", data.lessons);
+            // Log each lesson's video URL for debugging
+            data.lessons.forEach((lesson: Lesson, index: number) => {
+              console.log(`Lesson ${index + 1} videoUrl:`, lesson.videoUrl);
+            });
             setLessons(data.lessons);
             setLoading(false);
             return;
@@ -137,8 +138,6 @@ const TopicPageContent = () => {
             // Set audio data if available
             if (data.voiceData) {
               setAudioUrl(data.voiceData.audioUrl);
-              setVoiceScript(data.voiceData.script);
-              setVoiceSegments(data.voiceData.segments);
               console.log("Setting audio URL:", data.voiceData.audioUrl);
             }
 
@@ -154,8 +153,6 @@ const TopicPageContent = () => {
             // Set audio data if available
             if (data.voiceData) {
               setAudioUrl(data.voiceData.audioUrl);
-              setVoiceScript(data.voiceData.script);
-              setVoiceSegments(data.voiceData.segments);
               console.log("Setting audio URL:", data.voiceData.audioUrl);
             }
 
@@ -259,11 +256,9 @@ const TopicPageContent = () => {
                   <VideoWithAudio
                     videoUrl={videoUrl}
                     audioUrl={audioUrl || undefined}
-                    script={voiceScript || undefined}
-                    segments={voiceSegments || undefined}
                     className="w-full rounded-2xl"
                     autoPlay={false}
-                    muted={false}
+                    onEnded={() => {}}
                   />
                 </div>
               )}
@@ -280,19 +275,21 @@ const TopicPageContent = () => {
 
 const TopicPage = () => {
   return (
-    <Suspense fallback={
-      <ShaderBackground>
-        <div className="relative z-10 min-h-screen flex flex-col">
-          <Navbar />
-          <main className="flex-1 flex flex-col justify-center items-center w-full">
-            <div className="text-center space-y-8">
-              <div className="text-2xl text-gray-900">Loading...</div>
-            </div>
-          </main>
-          <Footer />
-        </div>
-      </ShaderBackground>
-    }>
+    <Suspense
+      fallback={
+        <ShaderBackground>
+          <div className="relative z-10 min-h-screen flex flex-col">
+            <Navbar />
+            <main className="flex-1 flex flex-col justify-center items-center w-full">
+              <div className="text-center space-y-8">
+                <div className="text-2xl text-gray-900">Loading...</div>
+              </div>
+            </main>
+            <Footer />
+          </div>
+        </ShaderBackground>
+      }
+    >
       <TopicPageContent />
     </Suspense>
   );
