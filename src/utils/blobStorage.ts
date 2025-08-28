@@ -224,7 +224,7 @@ class BlobStorage {
         filename: blob.pathname.split("/").pop() || "",
         url: blob.url,
         size: blob.size,
-        contentType: blob.contentType || "video/mp4",
+        contentType: "video/mp4",
       }));
 
       return videoFiles;
