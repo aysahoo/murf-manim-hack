@@ -10,6 +10,7 @@ type ConceptInputFormProps = {
   onChange: (value: string) => void;
   onFocus: (focused: boolean) => void;
   onSubmit: () => void;
+  mode?: "single" | "lessons";
 };
 
 const ConceptInputForm: React.FC<ConceptInputFormProps> = ({
@@ -18,6 +19,7 @@ const ConceptInputForm: React.FC<ConceptInputFormProps> = ({
   onChange,
   onFocus,
   onSubmit,
+  mode = "single",
 }) => {
   const isValid = inputValue.trim().length > 0;
 
@@ -34,8 +36,22 @@ const ConceptInputForm: React.FC<ConceptInputFormProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
       >
-        Write the concept you want to understand
+        {mode === "lessons" 
+          ? "Write the concept for lesson breakdown"
+          : "Write the concept you want to understand"
+        }
       </motion.div>
+      
+      {mode === "lessons" && (
+        <motion.div
+          className="text-lg md:text-xl text-gray-600 text-center w-full mb-6"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+        >
+          Get 3-4 mini-lessons, each with ≤45 words narration & 15-20 sec animations
+        </motion.div>
+      )}
       <div className="relative w-full min-h-[1em]">
         <input
           type="text"
