@@ -1,27 +1,39 @@
-import { z } from 'zod';
-import { generateObject } from 'ai';
-import { google } from '@ai-sdk/google';
-import { topicCache } from './cache';
+import { z } from "zod";
+import { blobStorage } from "./blobStorage";
 
 // Schema for lesson breakdown
 const lessonBreakdownSchema = z.object({
-  lessons: z.array(z.object({
-    part: z.number().describe("Part number (1, 2, 3, etc.)"),
-    script: z.string().max(70).describe("Narration script (≤70 words for 15 second duration)"),
-    manim_code: z.string().describe("Python Manim code for this part with lightweight animations")
-  })).min(3).max(4).describe("3-4 sequential mini-lessons")
+  lessons: z
+    .array(
+      z.object({
+        part: z.number().describe("Part number (1, 2, 3, etc.)"),
+        script: z
+          .string()
+          .max(70)
+          .describe("Narration script (≤70 words for 15 second duration)"),
+        manim_code: z
+          .string()
+          .describe(
+            "Python Manim code for this part with lightweight animations"
+          ),
+      })
+    )
+    .min(3)
+    .max(4)
+    .describe("3-4 sequential mini-lessons"),
 });
 
 // Fallback lesson breakdowns for common topics
 function getFallbackLessonBreakdown(topic: string) {
   const topicLower = topic.toLowerCase();
-  
-  if (topicLower.includes('string theory')) {
+
+  if (topicLower.includes("string theory")) {
     return {
       lessons: [
         {
           part: 1,
-          script: "Welcome to our comprehensive string theory exploration! Imagine everything around us - your phone, the air, even you - is fundamentally made of incredibly tiny vibrating strings. These aren't ordinary strings, but microscopic building blocks smaller than anything we can possibly see, vibrating in countless different patterns to create all matter and energy throughout the entire universe.",
+          script:
+            "Welcome to our comprehensive string theory exploration! Imagine everything around us - your phone, the air, even you - is fundamentally made of incredibly tiny vibrating strings. These aren't ordinary strings, but microscopic building blocks smaller than anything we can possibly see, vibrating in countless different patterns to create all matter and energy throughout the entire universe.",
           manim_code: `from manim import *
 
 class Part1(Scene):
@@ -47,11 +59,12 @@ class Part1(Scene):
         self.play(string_line.animate.shift(DOWN * 0.4), run_time=0.5)
         self.play(string_line.animate.shift(UP * 0.2), run_time=0.5)
         
-        self.wait(2)`
+        self.wait(2)`,
         },
         {
           part: 2,
-          script: "Now here's where things get absolutely mind-bending and truly extraordinary! These vibrating strings don't exist in just our familiar three dimensions of length, width, and height. String theory reveals that reality actually needs up to eleven dimensions total - with extra hidden dimensions curled up so incredibly tiny that we can't detect them. These invisible dimensions are absolutely crucial for the mathematics to work properly.",
+          script:
+            "Now here's where things get absolutely mind-bending and truly extraordinary! These vibrating strings don't exist in just our familiar three dimensions of length, width, and height. String theory reveals that reality actually needs up to eleven dimensions total - with extra hidden dimensions curled up so incredibly tiny that we can't detect them. These invisible dimensions are absolutely crucial for the mathematics to work properly.",
           manim_code: `from manim import *
 
 class Part2(Scene):
@@ -79,11 +92,12 @@ class Part2(Scene):
         self.play(FadeIn(cube_outline), Write(visible_dims), run_time=3)
         self.play(FadeIn(mystery), Write(hidden_dims), run_time=3)
         
-        self.wait(2)`
+        self.wait(2)`,
         },
         {
           part: 3,
-          script: "But why do physicists obsess over string theory with such passionate dedication? Because it promises the ultimate prize - a comprehensive 'Theory of Everything' that unifies all fundamental forces into one elegant mathematical framework. Gravity, electromagnetism, and nuclear forces would all emerge from different vibration patterns of the same underlying strings, finally explaining how our universe truly works at its deepest level.",
+          script:
+            "But why do physicists obsess over string theory with such passionate dedication? Because it promises the ultimate prize - a comprehensive 'Theory of Everything' that unifies all fundamental forces into one elegant mathematical framework. Gravity, electromagnetism, and nuclear forces would all emerge from different vibration patterns of the same underlying strings, finally explaining how our universe truly works at its deepest level.",
           manim_code: `from manim import *
 
 class Part3(Scene):
@@ -113,11 +127,12 @@ class Part3(Scene):
         self.play(FadeIn(arrow), run_time=2)
         self.play(Write(unified), run_time=2)
         
-        self.wait(2)`
+        self.wait(2)`,
         },
         {
           part: 4,
-          script: "However, here's the fascinating challenge that keeps physicists awake at night with endless contemplation. Despite being mathematically gorgeous and internally consistent, string theory remains completely unproven by experiments. The energy scales needed to test it directly are impossibly high for current technology. So scientists are getting increasingly creative, searching for indirect evidence and hoping future technology might reveal whether these tiny strings truly orchestrate reality.",
+          script:
+            "However, here's the fascinating challenge that keeps physicists awake at night with endless contemplation. Despite being mathematically gorgeous and internally consistent, string theory remains completely unproven by experiments. The energy scales needed to test it directly are impossibly high for current technology. So scientists are getting increasingly creative, searching for indirect evidence and hoping future technology might reveal whether these tiny strings truly orchestrate reality.",
           manim_code: `from manim import *
 
 class Part4(Scene):
@@ -143,18 +158,19 @@ class Part4(Scene):
         self.play(Write(theory), Write(vs_text), Write(experiment), run_time=4)
         self.play(Write(future), run_time=2)
         
-        self.wait(2)`
-        }
-      ]
+        self.wait(2)`,
+        },
+      ],
     };
   }
-  
-  if (topicLower.includes('gravity')) {
+
+  if (topicLower.includes("gravity")) {
     return {
       lessons: [
         {
           part: 1,
-          script: "Gravity is the fundamental force that pulls objects toward each other throughout the universe. Earth's gravity pulls everything downward toward its center with tremendous force. The more massive an object becomes, the stronger its gravitational pull on surrounding objects. This invisible force shapes the structure of our entire cosmos and governs planetary motion.",
+          script:
+            "Gravity is the fundamental force that pulls objects toward each other throughout the universe. Earth's gravity pulls everything downward toward its center with tremendous force. The more massive an object becomes, the stronger its gravitational pull on surrounding objects. This invisible force shapes the structure of our entire cosmos and governs planetary motion.",
           manim_code: `from manim import *
 
 class Part1(Scene):
@@ -175,11 +191,12 @@ class Part1(Scene):
         # Show gravitational pull
         self.play(apple.animate.shift(DOWN * 2.5), run_time=3)
         
-        self.wait(2)`
+        self.wait(2)`,
         },
         {
           part: 2,
-          script: "Newton's revolutionary law states that gravitational force depends directly on mass and inversely on distance squared. Larger masses create exponentially stronger gravity fields around them. Objects farther apart experience dramatically weaker gravitational attraction. This mathematical relationship governs everything from falling apples to orbiting planets throughout the solar system.",
+          script:
+            "Newton's revolutionary law states that gravitational force depends directly on mass and inversely on distance squared. Larger masses create exponentially stronger gravity fields around them. Objects farther apart experience dramatically weaker gravitational attraction. This mathematical relationship governs everything from falling apples to orbiting planets throughout the solar system.",
           manim_code: `from manim import *
 
 class Part2(Scene):
@@ -203,11 +220,12 @@ class Part2(Scene):
         self.play(Write(equation), run_time=3)
         self.play(FadeIn(force_label), FadeIn(mass_label), run_time=3)
         
-        self.wait(2)`
+        self.wait(2)`,
         },
         {
           part: 3,
-          script: "Einstein revolutionized our understanding by showing gravity isn't actually a force but curved spacetime itself. Massive objects bend and warp the fabric of space and time around them. This fundamental curvature guides the motion of all other objects. Matter tells spacetime how to curve, and curved spacetime tells matter how to move through the universe.",
+          script:
+            "Einstein revolutionized our understanding by showing gravity isn't actually a force but curved spacetime itself. Massive objects bend and warp the fabric of space and time around them. This fundamental curvature guides the motion of all other objects. Matter tells spacetime how to curve, and curved spacetime tells matter how to move through the universe.",
           manim_code: `from manim import *
 
 class Part3(Scene):
@@ -233,18 +251,19 @@ class Part3(Scene):
         self.play(FadeIn(grid_lines), run_time=4)
         self.play(Write(mass_text), run_time=2)
         
-        self.wait(2)`
-        }
-      ]
+        self.wait(2)`,
+        },
+      ],
     };
   }
 
-  if (topicLower.includes('photosynthesis')) {
+  if (topicLower.includes("photosynthesis")) {
     return {
       lessons: [
         {
           part: 1,
-          script: "Photosynthesis is the remarkable process by which plants make food using sunlight energy. Plants capture radiant light energy from the sun through specialized chlorophyll molecules. This captured energy powers the complex process of creating sugar from simple ingredients like carbon dioxide and water. This process sustains virtually all life on Earth.",
+          script:
+            "Photosynthesis is the remarkable process by which plants make food using sunlight energy. Plants capture radiant light energy from the sun through specialized chlorophyll molecules. This captured energy powers the complex process of creating sugar from simple ingredients like carbon dioxide and water. This process sustains virtually all life on Earth.",
           manim_code: `from manim import *
 
 class Part1(Scene):
@@ -273,11 +292,12 @@ class Part1(Scene):
         self.play(FadeIn(rays), run_time=2)
         self.play(FadeIn(plant), run_time=2)
         
-        self.wait(2)`
+        self.wait(2)`,
         },
         {
           part: 2,
-          script: "The photosynthesis equation clearly shows the precise inputs and outputs of this vital process. Carbon dioxide from the air plus water from roots plus light energy creates glucose sugar and releases life-giving oxygen gas. This chemical transformation converts inorganic materials into organic compounds. The equation represents one of nature's most important chemical reactions.",
+          script:
+            "The photosynthesis equation clearly shows the precise inputs and outputs of this vital process. Carbon dioxide from the air plus water from roots plus light energy creates glucose sugar and releases life-giving oxygen gas. This chemical transformation converts inorganic materials into organic compounds. The equation represents one of nature's most important chemical reactions.",
           manim_code: `from manim import *
 
 class Part2(Scene):
@@ -301,11 +321,12 @@ class Part2(Scene):
         self.play(Write(equation), run_time=4)
         self.play(FadeIn(inputs), FadeIn(outputs), run_time=2)
         
-        self.wait(2)`
+        self.wait(2)`,
         },
         {
           part: 3,
-          script: "Photosynthesis happens in specialized structures called chloroplasts inside plant cells. Chlorophyll is the essential green pigment that captures light energy from sunlight. This remarkable process feeds nearly all life on Earth by producing food and oxygen. Without photosynthesis, complex life as we know it could not exist on our planet.",
+          script:
+            "Photosynthesis happens in specialized structures called chloroplasts inside plant cells. Chlorophyll is the essential green pigment that captures light energy from sunlight. This remarkable process feeds nearly all life on Earth by producing food and oxygen. Without photosynthesis, complex life as we know it could not exist on our planet.",
           manim_code: `from manim import *
 
 class Part3(Scene):
@@ -340,9 +361,9 @@ class Part3(Scene):
         self.play(FadeIn(plants), run_time=3)
         self.play(Write(life_text), run_time=2)
         
-        self.wait(2)`
-        }
-      ]
+        self.wait(2)`,
+        },
+      ],
     };
   }
 
@@ -369,7 +390,7 @@ class Part1(Scene):
         self.play(FadeIn(intro_text), run_time=3)
         self.play(Write(concept), run_time=3)
         
-        self.wait(2)`
+        self.wait(2)`,
       },
       {
         part: 2,
@@ -395,7 +416,7 @@ class Part2(Scene):
         self.play(FadeIn(arrow), run_time=2)
         self.play(Write(principle2), run_time=2)
         
-        self.wait(2)`
+        self.wait(2)`,
       },
       {
         part: 3,
@@ -421,9 +442,9 @@ class Part3(Scene):
         self.play(FadeIn(center), Write(center_text), run_time=2)
         self.play(Write(app1), Write(app2), run_time=3)
         
-        self.wait(2)`
-      }
-    ]
+        self.wait(2)`,
+      },
+    ],
   };
 }
 
@@ -438,27 +459,29 @@ export async function generateLessonBreakdown(topic: string): Promise<{
   }>;
 }> {
   try {
-    // Check cache first
-    console.log(`Checking cache for lesson breakdown: ${topic}`);
-    const cachedBreakdown = await topicCache.getLessonBreakdown?.(topic);
-    
+    // Check storage first
+    console.log(`Checking storage for lesson breakdown: ${topic}`);
+    const cachedBreakdown = await blobStorage.getLessonBreakdown(topic);
+
     if (cachedBreakdown) {
-      console.log(`🎯 Cache HIT - Using cached lesson breakdown for: ${topic}`);
+      console.log(
+        `🎯 Storage HIT - Using stored lesson breakdown for: ${topic}`
+      );
       return cachedBreakdown;
     }
 
-    console.log(`🔄 Cache MISS - Generating new lesson breakdown for: ${topic}`);
-    
+    console.log(
+      `🔄 Storage MISS - Generating new lesson breakdown for: ${topic}`
+    );
+
     // Use fallback immediately (can be enhanced with AI later)
-    console.log('🚨 Using fallback lesson breakdown...');
+    console.log("🚨 Using fallback lesson breakdown...");
     const fallbackBreakdown = getFallbackLessonBreakdown(topic);
-    
-    // Cache the fallback for future use if cache method exists
-    if (topicCache.setLessonBreakdown) {
-      await topicCache.setLessonBreakdown(topic, fallbackBreakdown);
-      console.log(`💾 Cached fallback lesson breakdown for future use: ${topic}`);
-    }
-    
+
+    // Store the fallback for future use
+    await blobStorage.storeLessonBreakdown(topic, fallbackBreakdown);
+    console.log(`💾 Stored fallback lesson breakdown for future use: ${topic}`);
+
     return fallbackBreakdown;
 
     /* Future AI integration - uncomment when ready to use Gemini API
@@ -496,27 +519,23 @@ Make each part build naturally on the previous one while being understandable in
 Topic: ${topic}`
     });
 
-    // Cache the result
-    if (topicCache.setLessonBreakdown) {
-      await topicCache.setLessonBreakdown(topic, object);
-      console.log(`💾 Cached lesson breakdown for future use: ${topic}`);
-    }
+    // Store the result
+    await blobStorage.storeLessonBreakdown(topic, object);
+    console.log(`💾 Stored lesson breakdown for future use: ${topic}`);
 
     return object;
     */
   } catch (error) {
-    console.error('Error generating lesson breakdown:', error);
-    console.log('🚨 AI generation failed, using fallback...');
-    
+    console.error("Error generating lesson breakdown:", error);
+    console.log("🚨 AI generation failed, using fallback...");
+
     // Return fallback lesson breakdown
     const fallbackBreakdown = getFallbackLessonBreakdown(topic);
-    
-    // Cache the fallback if cache method exists
-    if (topicCache.setLessonBreakdown) {
-      await topicCache.setLessonBreakdown(topic, fallbackBreakdown);
-      console.log(`💾 Cached fallback lesson breakdown for future use: ${topic}`);
-    }
-    
+
+    // Store the fallback
+    await blobStorage.storeLessonBreakdown(topic, fallbackBreakdown);
+    console.log(`💾 Stored fallback lesson breakdown for future use: ${topic}`);
+
     return fallbackBreakdown;
   }
 }

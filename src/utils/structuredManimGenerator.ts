@@ -1,13 +1,15 @@
-import { z } from 'zod';
-import { generateObject } from 'ai';
-import { google } from '@ai-sdk/google';
-import { topicCache } from './cache';
+import { z } from "zod";
+import { blobStorage } from "./blobStorage";
 
 // Fallback Manim code when API is down
 function getFallbackManimCode(topic: string): string {
   const topicLower = topic.toLowerCase();
-  
-  if (topicLower.includes('math') || topicLower.includes('addition') || topicLower.includes('equation')) {
+
+  if (
+    topicLower.includes("math") ||
+    topicLower.includes("addition") ||
+    topicLower.includes("equation")
+  ) {
     return `from manim import *
 
 class MathScene(Scene):
@@ -31,8 +33,8 @@ class MathScene(Scene):
         self.play(equation[4].animate.set_color(YELLOW))
         self.wait(2)`;
   }
-  
-  if (topicLower.includes('circle') || topicLower.includes('geometry')) {
+
+  if (topicLower.includes("circle") || topicLower.includes("geometry")) {
     return `from manim import *
 
 class CircleScene(Scene):
@@ -57,8 +59,8 @@ class CircleScene(Scene):
         self.play(Create(radius), Write(radius_label))
         self.wait(2)`;
   }
-  
-  if (topicLower.includes('gravity') || topicLower.includes('physics')) {
+
+  if (topicLower.includes("gravity") || topicLower.includes("physics")) {
     return `from manim import *
 
 class GravityScene(Scene):
@@ -91,8 +93,12 @@ class GravityScene(Scene):
         self.play(apple.animate.move_to(earth.get_center() + UP * 1.3))
         self.wait(2)`;
   }
-  
-  if (topicLower.includes('list') || topicLower.includes('array') || topicLower.includes('data')) {
+
+  if (
+    topicLower.includes("list") ||
+    topicLower.includes("array") ||
+    topicLower.includes("data")
+  ) {
     return `from manim import *
 
 class ListScene(Scene):
@@ -150,7 +156,7 @@ class ListScene(Scene):
         self.wait(1)`;
   }
 
-  if (topicLower.includes('tuple') || topicLower.includes('pair')) {
+  if (topicLower.includes("tuple") || topicLower.includes("pair")) {
     return `from manim import *
 
 class TupleScene(Scene):
@@ -211,7 +217,7 @@ class TupleScene(Scene):
         self.play(Write(immutable))
         self.wait(2)`;
   }
-  
+
   // Default fallback
   return `from manim import *
 
@@ -243,45 +249,59 @@ class TopicScene(Scene):
 
 // Schema for structured Manim code generation
 const manimCodeSchema = z.object({
-  imports: z.array(z.string()).describe("All necessary import statements for Manim"),
-  class_name: z.string().describe("Name of the Scene class (e.g., 'PythagoreanTheorem')"),
+  imports: z
+    .array(z.string())
+    .describe("All necessary import statements for Manim"),
+  class_name: z
+    .string()
+    .describe("Name of the Scene class (e.g., 'PythagoreanTheorem')"),
   class_definition: z.object({
     name: z.string(),
     docstring: z.string().optional(),
-    methods: z.array(z.object({
-      name: z.string(),
-      parameters: z.array(z.string()),
-      body: z.string().describe("Complete method body with proper 4-space indentation"),
-      docstring: z.string().optional()
-    }))
+    methods: z.array(
+      z.object({
+        name: z.string(),
+        parameters: z.array(z.string()),
+        body: z
+          .string()
+          .describe("Complete method body with proper 4-space indentation"),
+        docstring: z.string().optional(),
+      })
+    ),
   }),
-  complete_script: z.string().describe("Full executable Manim Python script with proper PEP 8 formatting")
+  complete_script: z
+    .string()
+    .describe(
+      "Full executable Manim Python script with proper PEP 8 formatting"
+    ),
 });
 
 /**
  * Advanced formatter that uses AI to generate structured, production-ready Manim code
  */
-export async function generateStructuredManimCode(topic: string): Promise<string> {
+export async function generateStructuredManimCode(
+  topic: string
+): Promise<string> {
   try {
-    // Check cache first
-    console.log(`Checking cache for Manim code: ${topic}`);
-    const cachedCode = await topicCache.getManimCode(topic);
-    
+    // Check storage first
+    console.log(`Checking storage for Manim code: ${topic}`);
+    const cachedCode = await blobStorage.getManimCode(topic);
+
     if (cachedCode) {
-      console.log(`🎯 Cache HIT - Using cached Manim code for: ${topic}`);
+      console.log(`🎯 Storage HIT - Using stored Manim code for: ${topic}`);
       return cachedCode.validatedCode;
     }
 
-    console.log(`🔄 Cache MISS - Generating new Manim code for: ${topic}`);
-    
+    console.log(`🔄 Storage MISS - Generating new Manim code for: ${topic}`);
+
     // Use fallback immediately instead of trying Gemini API (quota exceeded)
-    console.log('🚨 Using fallback Manim code (Gemini quota exceeded)...');
+    console.log("🚨 Using fallback Manim code (Gemini quota exceeded)...");
     const fallbackCode = getFallbackManimCode(topic);
-    
-    // Cache the fallback for future use
-    await topicCache.setManimCode(topic, fallbackCode, fallbackCode);
-    console.log(`💾 Cached fallback Manim code for future use: ${topic}`);
-    
+
+    // Store the fallback for future use
+    await blobStorage.storeManimCode(topic, fallbackCode, fallbackCode);
+    console.log(`💾 Stored fallback Manim code for future use: ${topic}`);
+
     return fallbackCode;
 
     /* Commented out Gemini API call due to quota
@@ -336,21 +356,21 @@ Generate complete, runnable Manim code with proper Python syntax but WITHOUT exe
     const rawCode = object.complete_script;
     const validatedCode = validateAndFixManimCode(rawCode);
 
-    // Cache the results
-    await topicCache.setManimCode(topic, rawCode, validatedCode);
-    console.log(`💾 Cached Manim code for future use: ${topic}`);
+    // Store the results
+    await blobStorage.storeManimCode(topic, rawCode, validatedCode);
+    console.log(`💾 Stored Manim code for future use: ${topic}`);
 
     return validatedCode;
     */
   } catch (error) {
-    console.error('Error generating structured Manim code:', error);
-    console.log('🚨 Gemini API failed for Manim code, using fallback...');
-    
-    // Return fallback Manim code and cache it
+    console.error("Error generating structured Manim code:", error);
+    console.log("🚨 Gemini API failed for Manim code, using fallback...");
+
+    // Return fallback Manim code and store it
     const fallbackCode = getFallbackManimCode(topic);
-    await topicCache.setManimCode(topic, fallbackCode, fallbackCode);
-    console.log(`💾 Cached fallback Manim code for future use: ${topic}`);
-    
+    await blobStorage.storeManimCode(topic, fallbackCode, fallbackCode);
+    console.log(`💾 Stored fallback Manim code for future use: ${topic}`);
+
     return fallbackCode;
   }
 }
@@ -362,117 +382,128 @@ export function validateAndFixManimCode(code: string): string {
   let fixedCode = code;
 
   // Ensure proper imports
-  if (!fixedCode.includes('from manim import *')) {
-    fixedCode = 'from manim import *\n\n' + fixedCode.replace(/^.*from manim import \*.*\n?/gm, '');
+  if (!fixedCode.includes("from manim import *")) {
+    fixedCode =
+      "from manim import *\n\n" +
+      fixedCode.replace(/^.*from manim import \*.*\n?/gm, "");
   }
 
   // Fix common Manim syntax issues
   fixedCode = fixedCode
     // Fix MathMathTex which doesn't exist (duplicated Math prefix) - more robust pattern
-    .replace(/MathMathTex/g, 'MathTex')
-    
+    .replace(/MathMathTex/g, "MathTex")
+
     // Fix Line.label() which doesn't exist
-    .replace(/(\w+) = Line\(([^)]*)\)\.label\(([^,]+),?\s*buff=([^)]+)\)/g,
-      '$1 = Line($2)\n    $1_label = MathTex($3).next_to($1, UP, buff=$4)')
-    
+    .replace(
+      /(\w+) = Line\(([^)]*)\)\.label\(([^,]+),?\s*buff=([^)]+)\)/g,
+      "$1 = Line($2)\n    $1_label = MathTex($3).next_to($1, UP, buff=$4)"
+    )
+
     // Fix any Tex to MathTex for mathematical content
-    .replace(/Tex\(("[^"]*[\\^_].*?"|'[^']*[\\^_].*?')\)/g, 'MathTex($1)')
-    
+    .replace(/Tex\(("[^"]*[\\^_].*?"|'[^']*[\\^_].*?')\)/g, "MathTex($1)")
+
     // Fix set_opacity without arguments
-    .replace(/(\w+)\.set_opacity\(\)/g, '$1.set_opacity(0.5)')
-    
+    .replace(/(\w+)\.set_opacity\(\)/g, "$1.set_opacity(0.5)")
+
     // Fix Square constructor with keyword argument
-    .replace(/Square\(side_length=([^,)]+)/g, 'Square($1')
-    
+    .replace(/Square\(side_length=([^,)]+)/g, "Square($1")
+
     // Fix Circle constructor with keyword argument
-    .replace(/Circle\(radius=([^,)]+)/g, 'Circle($1')
-    
+    .replace(/Circle\(radius=([^,)]+)/g, "Circle($1")
+
     // Fix animation syntax for FadeOut all
-    .replace(/self\.play\(\*\[FadeOut\(mob\) for mob in self\.mobjects\]\)/g,
-      'self.play(*[FadeOut(mob) for mob in self.mobjects])')
-      
+    .replace(
+      /self\.play\(\*\[FadeOut\(mob\) for mob in self\.mobjects\]\)/g,
+      "self.play(*[FadeOut(mob) for mob in self.mobjects])"
+    )
+
     // Fix calls to non-existent label method on geometric objects
-    .replace(/(\w+)\.label\(([^)]+)\)/g, 'MathTex($2).next_to($1, UP)')
-    
+    .replace(/(\w+)\.label\(([^)]+)\)/g, "MathTex($2).next_to($1, UP)")
+
     // Fix common animation sequencing issues
-    .replace(/self\.play\(([^)]+)\.animate\.([^)]+)\)/g, 
-      'self.play($1.animate.$2)')
-      
+    .replace(
+      /self\.play\(([^)]+)\.animate\.([^)]+)\)/g,
+      "self.play($1.animate.$2)"
+    )
+
     // Fix missing arguments in Create animation
-    .replace(/Create\(\)/g, 'Create()')
-    
+    .replace(/Create\(\)/g, "Create()")
+
     // Fix Vector constructor with missing arguments
-    .replace(/Vector\(\)/g, 'Vector(RIGHT)')
-    
+    .replace(/Vector\(\)/g, "Vector(RIGHT)")
+
     // Fix ValueTracker initialization without value
-    .replace(/ValueTracker\(\)/g, 'ValueTracker(0)')
-    
+    .replace(/ValueTracker\(\)/g, "ValueTracker(0)")
+
     // Fix incorrect MathTex formatting for fractions
-    .replace(/MathTex\("(.*?)\\frac\{(.*?)\}\{(.*?)\}"(.*?)\)/g, 
-      'MathTex(r"$1\\frac{$2}{$3}"$4)')
-    
+    .replace(
+      /MathTex\("(.*?)\\frac\{(.*?)\}\{(.*?)\}"(.*?)\)/g,
+      'MathTex(r"$1\\frac{$2}{$3}"$4)'
+    )
+
     // Ensure r prefix for complex math expressions
     .replace(/MathTex\("(.*?[\\^_\{\}].*?)"\)/g, 'MathTex(r"$1")');
 
   // Validate structure
   if (!/class \w+\(Scene\):/.test(fixedCode)) {
-    throw new Error('No valid Scene class found in the generated code');
+    throw new Error("No valid Scene class found in the generated code");
   }
 
   if (!/def construct\(self\):/.test(fixedCode)) {
-    throw new Error('No construct method found in the Scene class');
+    throw new Error("No construct method found in the Scene class");
   }
-  
+
   // Ensure proper indentation
-  const lines = fixedCode.split('\n');
+  const lines = fixedCode.split("\n");
   const properlyIndentedLines = [];
   let inClass = false;
   let inMethod = false;
-  
+
   for (const line of lines) {
     const trimmedLine = line.trim();
-    
+
     // Skip empty lines
     if (!trimmedLine) {
-      properlyIndentedLines.push('');
+      properlyIndentedLines.push("");
       continue;
     }
-    
+
     // Check for class definition
-    if (trimmedLine.startsWith('class ') && trimmedLine.includes('(Scene):')) {
+    if (trimmedLine.startsWith("class ") && trimmedLine.includes("(Scene):")) {
       inClass = true;
       inMethod = false;
       properlyIndentedLines.push(trimmedLine);
       continue;
     }
-    
+
     // Check for method definition within class
-    if (inClass && trimmedLine.startsWith('def ')) {
+    if (inClass && trimmedLine.startsWith("def ")) {
       inMethod = true;
-      properlyIndentedLines.push('    ' + trimmedLine);
+      properlyIndentedLines.push("    " + trimmedLine);
       continue;
     }
-    
+
     // Handle indentation based on context
     if (inMethod) {
-      properlyIndentedLines.push('        ' + trimmedLine);
+      properlyIndentedLines.push("        " + trimmedLine);
     } else if (inClass) {
-      properlyIndentedLines.push('    ' + trimmedLine);
+      properlyIndentedLines.push("    " + trimmedLine);
     } else {
       properlyIndentedLines.push(trimmedLine);
     }
   }
-  
+
   // Join lines back into a string
-  fixedCode = properlyIndentedLines.join('\n');
-  
+  fixedCode = properlyIndentedLines.join("\n");
+
   // Check if there are self.wait() calls in the code, and add them if needed
   // This is crucial for rendering videos properly
-  if (!fixedCode.includes('self.wait(')) {
+  if (!fixedCode.includes("self.wait(")) {
     // Find the end of the construct method to add a wait call
-    const constructPattern = /def construct\(self\):[\s\S]*?\n(\s+)(?:[^\n]*$|$)/;
+    const constructPattern =
+      /def construct\(self\):[\s\S]*?\n(\s+)(?:[^\n]*$|$)/;
     const match = fixedCode.match(constructPattern);
-    
+
     if (match) {
       const indentation = match[1];
       // Add a wait call at the end of the construct method
@@ -482,18 +513,24 @@ export function validateAndFixManimCode(code: string): string {
       );
     }
   }
-  
+
   // Fix duplicate construct method definitions
-  fixedCode = fixedCode.replace(/def construct\(self\):\s*\n\s*def construct\(self\):/g, 'def construct(self):');
+  fixedCode = fixedCode.replace(
+    /def construct\(self\):\s*\n\s*def construct\(self\):/g,
+    "def construct(self):"
+  );
 
   // Add additional wait calls after each self.play for better rendering
   const playLines = fixedCode.match(/self\.play\(.*?\)/g);
   if (playLines && playLines.length > 0) {
     // Iterate through each self.play and add a wait if there isn't already one
     for (const playLine of playLines) {
-      const playLineEscaped = playLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const hasWaitAfterPlay = new RegExp(`${playLineEscaped}[\\s\\S]*?self\\.wait\\(`, 'm').test(fixedCode);
-      
+      const playLineEscaped = playLine.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const hasWaitAfterPlay = new RegExp(
+        `${playLineEscaped}[\\s\\S]*?self\\.wait\\(`,
+        "m"
+      ).test(fixedCode);
+
       if (!hasWaitAfterPlay) {
         fixedCode = fixedCode.replace(
           playLineEscaped,
