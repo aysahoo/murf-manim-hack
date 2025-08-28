@@ -3,9 +3,13 @@ import { useRouter } from "next/navigation";
 
 interface NavbarProps {
   showBackButton?: boolean;
+  backPath?: string;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ showBackButton = false }) => {
+const Navbar: React.FC<NavbarProps> = ({
+  showBackButton = false,
+  backPath = "/explain",
+}) => {
   const router = useRouter();
 
   return (
@@ -14,7 +18,7 @@ const Navbar: React.FC<NavbarProps> = ({ showBackButton = false }) => {
         <div className="flex justify-between items-center h-16 w-full">
           {showBackButton && (
             <button
-              onClick={() => router.push("/explain")}
+              onClick={() => router.push(backPath)}
               className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center transition-colors hover:bg-gray-800 cursor-pointer"
               aria-label="Go back"
             >
@@ -56,7 +60,29 @@ const Navbar: React.FC<NavbarProps> = ({ showBackButton = false }) => {
             </h1>
           </div>
 
-          <div className="w-8"></div>
+          <a
+            href="/library"
+            className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center transition-colors hover:bg-gray-800 cursor-pointer shadow-lg"
+            title="View Library"
+            aria-label="Go to library"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+            </svg>
+          </a>
         </div>
       </div>
     </nav>

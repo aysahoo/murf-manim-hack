@@ -1,5 +1,6 @@
 import React from "react";
 import ShaderBackground from "../components/ShaderBackground";
+import Footer from "../components/Footer";
 
 const page = () => {
   return (
@@ -79,7 +80,10 @@ const page = () => {
               <h2 className="text-2xl md:text-3xl font-medium text-gray-800">
                 Featured Work
               </h2>
-              <button className="bg-black text-white px-5 py-3 rounded-full flex items-center gap-2 hover:bg-gray-800 transition-colors cursor-pointer">
+              <a
+                href="/library"
+                className="bg-black text-white px-5 py-3 rounded-full flex items-center gap-2 hover:bg-gray-800 transition-colors cursor-pointer"
+              >
                 View All
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -94,11 +98,14 @@ const page = () => {
                 >
                   <path d="M5 12h14m-7-7l7 7-7 7" />
                 </svg>
-              </button>
+              </a>
             </div>
             {/* Portfolio grid would go here */}
           </div>
         </main>
+
+        {/* Footer */}
+        <Footer />
       </div>
     </ShaderBackground>
   );

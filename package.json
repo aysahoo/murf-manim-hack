@@ -15,6 +15,7 @@
     "@openrouter/ai-sdk-provider": "^1.1.2",
     "@paper-design/shaders-react": "^0.0.46",
     "ai": "^5.0.23",
+    "axios": "^1.11.0",
     "e2b": "^2.0.1",
     "motion": "^12.23.12",
     "next": "15.5.0",

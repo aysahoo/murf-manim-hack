@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import ShaderBackground from "../../components/ShaderBackground";
 import ConceptInputForm from "../../components/ConceptInputForm";
 import Navbar from "../../components/Navbar";
+import Footer from "../../components/Footer";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 
@@ -16,12 +17,12 @@ const page = () => {
   return (
     <ShaderBackground>
       <div className="relative z-10 min-h-screen flex flex-col">
-        <Navbar />
+        <Navbar showBackButton={true} backPath="/" />
 
         <main className="flex-1 flex flex-col w-full">
           <div className="flex-1 flex flex-col justify-center w-full">
             {/* Mode Selector */}
-            <motion.div 
+            <motion.div
               className="flex justify-center mb-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -60,13 +61,18 @@ const page = () => {
                 const trimmed = inputValue.trim();
                 if (trimmed) {
                   // Redirect to loading screen with topic and mode in query params
-                  router.push(`/loading?topic=${encodeURIComponent(trimmed)}&mode=${mode}`);
+                  router.push(
+                    `/loading?topic=${encodeURIComponent(trimmed)}&mode=${mode}`
+                  );
                 }
               }}
               mode={mode}
             />
           </div>
         </main>
+
+        {/* Footer */}
+        <Footer />
       </div>
     </ShaderBackground>
   );
