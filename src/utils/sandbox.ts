@@ -360,7 +360,7 @@ export async function executeCodeAndListFiles(code: string) {
       },
       files,
       videoFiles: extractedVideos.map((vf) => ({
-        path: vf.path.replace("/code/", ""),
+        path: vf.path, // Keep the full blob URL as-is
         size: vf.size,
       })),
     };

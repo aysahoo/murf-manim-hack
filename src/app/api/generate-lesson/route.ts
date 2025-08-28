@@ -5,8 +5,6 @@ import { executeCodeAndListFiles } from "@/utils/sandbox";
 import { generateVoiceNarration } from "@/utils/voiceNarration";
 import { validateAndFixManimCode } from "@/utils/structuredManimGenerator";
 import { convertEscapedNewlines } from "@/utils/formatManimCode";
-import path from "path";
-import fs from "fs";
 
 interface LessonItem {
   part: number;
@@ -100,63 +98,23 @@ export async function POST(request: NextRequest) {
           console.log(`⚡ Executing Manim code for Part ${lesson.part}...`);
           const result = await executeCodeAndListFiles(multilineCode);
 
-          // Generate unique video URL to prevent duplicates
+          // Use blob storage URL directly
           let videoUrl = null;
           if (result.videoFiles && result.videoFiles.length > 0) {
-            const timestamp = Date.now();
-            const randomId = Math.random().toString(36).substring(2, 8);
-            const uniqueFileName = `${topic
-              .toLowerCase()
-              .replace(/[^a-z0-9]/g, "_")}_part${
-              lesson.part
-            }_${timestamp}_${randomId}.mp4`;
-
-            // The file is already saved in public/videos/ by the sandbox
-            // We just need to create the proper URL
-            const originalPath = result.videoFiles[0].path;
-            const publicPath = path.join(
-              process.cwd(),
-              "public",
-              "videos",
-              uniqueFileName
+            // The sandbox already uploaded to blob storage and returns the blob URL
+            videoUrl = result.videoFiles[0].path; // This is actually the blob URL from sandbox.ts
+            console.log(
+              `✅ Using blob storage video for Part ${lesson.part}: ${videoUrl}`
             );
-
-            try {
-              // Copy the file with unique name instead of renaming
-              if (fs.existsSync(originalPath)) {
-                fs.copyFileSync(originalPath, publicPath);
-                videoUrl = `/videos/${uniqueFileName}`;
-                console.log(
-                  `✅ Generated unique video for Part ${lesson.part}: ${videoUrl}`
-                );
-              } else {
-                // File already saved by sandbox, use original name
-                const originalFileName = path.basename(originalPath);
-                videoUrl = `/videos/${originalFileName}`;
-                console.log(
-                  `⚠️ Using sandbox-saved video for Part ${lesson.part}: ${videoUrl}`
-                );
-              }
-            } catch (copyError) {
-              console.error(
-                `❌ Error copying video file for Part ${lesson.part}:`,
-                copyError
-              );
-              const originalFileName = path.basename(originalPath);
-              videoUrl = `/videos/${originalFileName}`;
-              console.log(
-                `⚠️ Fallback to original filename for Part ${lesson.part}: ${videoUrl}`
-              );
-            }
           } else {
             console.warn(
               `⚠️ No video generated for Part ${lesson.part}, using fallback`
             );
-            // Use a fallback video based on topic
+            // Use available fallback videos from public/videos
             const fallbackVideos = [
-              "/videos/SimpleCircleAnimation.mp4",
-              "/videos/GravityScene.mp4",
-              "/videos/BasicMathScene.mp4",
+              "/videos/Part1.mp4",
+              "/videos/Part3.mp4",
+              "/videos/TopicScene.mp4",
             ];
             videoUrl = fallbackVideos[index % fallbackVideos.length];
           }
@@ -200,9 +158,9 @@ export async function POST(request: NextRequest) {
 
           // Return lesson with fallback video
           const fallbackVideos = [
-            "/videos/SimpleCircleAnimation.mp4",
-            "/videos/GravityScene.mp4",
-            "/videos/BasicMathScene.mp4",
+            "/videos/Part1.mp4",
+            "/videos/Part3.mp4",
+            "/videos/TopicScene.mp4",
           ];
           return {
             part: lesson.part,
