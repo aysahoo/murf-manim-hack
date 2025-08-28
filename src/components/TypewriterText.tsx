@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { motion } from "motion/react";
 
 const TypewriterText: React.FC = () => {
-  const topics = [
+  const topics = useMemo(() => [
     "quantum physics",
     "machine learning",
     "calculus",
@@ -13,7 +13,7 @@ const TypewriterText: React.FC = () => {
     "organic chemistry",
     "linear algebra",
     "electromagnetism",
-  ];
+  ], []);
 
   const [currentText, setCurrentText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);

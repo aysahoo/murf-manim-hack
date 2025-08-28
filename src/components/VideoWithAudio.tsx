@@ -25,7 +25,6 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
   const [duration, setDuration] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [showControls, setShowControls] = useState(false);
-  const [audioDuration, setAudioDuration] = useState(0);
 
   // Handle video playback events
   useEffect(() => {
@@ -395,7 +394,6 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
             crossOrigin="anonymous"
             onLoadedMetadata={(e) => {
               const audio = e.target as HTMLAudioElement;
-              setAudioDuration(audio.duration);
               console.log(
                 "✅ Audio loaded successfully:",
                 audio.duration + "s"
