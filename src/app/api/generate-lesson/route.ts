@@ -6,12 +6,6 @@ import { generateVoiceNarration } from "@/utils/voiceNarration";
 import { validateAndFixManimCode } from "@/utils/structuredManimGenerator";
 import { convertEscapedNewlines } from "@/utils/formatManimCode";
 
-interface LessonItem {
-  part: number;
-  script: string;
-  manim_code: string;
-}
-
 interface ProcessedLesson {
   part: number;
   script: string;
@@ -31,13 +25,6 @@ interface GenerateLessonResponse {
 
 // Request deduplication - prevent multiple simultaneous requests for same topic
 const activeRequests = new Map<string, Promise<GenerateLessonResponse>>();
-interface LessonResponse {
-  part: number;
-  script: string;
-  manim_code: string;
-  video_url?: string;
-  audio_url?: string;
-}
 
 export async function POST(request: NextRequest) {
   try {

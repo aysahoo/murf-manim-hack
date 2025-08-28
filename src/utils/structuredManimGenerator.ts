@@ -1,6 +1,4 @@
 import { z } from "zod";
-import { generateObject } from "ai";
-import { google } from "@ai-sdk/google";
 import { blobStorage } from "./blobStorage";
 
 // Fallback Manim code when API is down

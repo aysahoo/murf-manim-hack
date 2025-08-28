@@ -1,6 +1,4 @@
 import { z } from "zod";
-import { generateObject } from "ai";
-import { google } from "@ai-sdk/google";
 import { blobStorage } from "./blobStorage";
 
 // Schema for lesson breakdown

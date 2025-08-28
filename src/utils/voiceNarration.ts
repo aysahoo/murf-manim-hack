@@ -1,6 +1,4 @@
 import axios from "axios";
-import fs from "fs";
-import path from "path";
 import { blobStorage } from "./blobStorage";
 
 // Fallback voice scripts when Gemini API is down
