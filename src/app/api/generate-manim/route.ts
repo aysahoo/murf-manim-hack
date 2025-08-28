@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateStructuredManimCode, validateAndFixManimCode } from '@/utils/structuredManimGenerator';
 import {convertEscapedNewlines} from '@/utils/formatManimCode';
 import { executeCodeAndListFiles } from '@/utils/sandbox';
+import { generateVoiceNarration } from '@/utils/voiceNarration';
+import { topicCache } from '@/utils/cache';
 import path from 'path';
+
+
 
 export async function POST(request: NextRequest) {
   try {
-    const { topic } = await request.json();
+    const { topic, includeVoice = true, voiceOptions } = await request.json();
 
     if (!topic) {
       return NextResponse.json(
@@ -15,7 +19,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Use structured generation only
+    // Clear expired cache entries periodically
+    await topicCache.clearExpiredCache();
+
+    // Generate structured Manim code (with built-in fallback)
     const manimCode = await generateStructuredManimCode(topic);
     const validatedCode = validateAndFixManimCode(manimCode);
     const multilineCode = convertEscapedNewlines(validatedCode);
@@ -34,15 +41,57 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Generate Murf AI voice narration if requested
+    let voiceData = null;
+    if (includeVoice) {
+      try {
+        console.log('Generating Murf AI voice narration...');
+        voiceData = await generateVoiceNarration(topic, multilineCode, voiceOptions);
+        console.log('Murf AI voice generation successful:', voiceData.audioUrl);
+      } catch (error) {
+        console.error('Murf AI voice generation failed:', error);
+        console.log('🔇 Continuing without voice narration - check Murf API key');
+        // Voice generation failed, but script was still generated
+        voiceData = null;
+      }
+    }
+
+    // If no video was generated, use existing fallback videos
+    if (!videoUrls.length) {
+      console.log('🎬 No video generated, using fallback videos...');
+      const fallbackVideos = [
+        '/videos/SimpleCircleAnimation.mp4',
+        '/videos/GravityScene.mp4', 
+        '/videos/EntropyScene.mp4',
+        '/videos/BasicMathScene.mp4'
+      ];
+      
+      // Pick a fallback video based on topic
+      const topicLower = topic.toLowerCase();
+      let selectedFallback = fallbackVideos[0]; // default
+      
+      if (topicLower.includes('math') || topicLower.includes('equation')) {
+        selectedFallback = '/videos/BasicMathScene.mp4';
+      } else if (topicLower.includes('gravity') || topicLower.includes('physics')) {
+        selectedFallback = '/videos/GravityScene.mp4';
+      } else if (topicLower.includes('entropy') || topicLower.includes('thermodynamics')) {
+        selectedFallback = '/videos/EntropyScene.mp4';
+      }
+      
+      videoUrls = [selectedFallback];
+    }
+
     return NextResponse.json({
       topic,
       manimCode: multilineCode,
-      generationMethod: 'structured',
+      generationMethod: result.success ? 'structured' : 'fallback',
       execution: result.execution,
       sandboxFiles: result.files,
       videoFiles: result.videoFiles || [],
       videoUrls,
-      success: result.success
+      voiceData,
+      success: true, // Always return success with fallbacks
+      fallbackUsed: !result.success || !voiceData?.audioUrl
     });
 
   } catch (error) {
