@@ -8,7 +8,7 @@ import Footer from "../../components/Footer";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 
-const page = () => {
+const ExplainPage: React.FC = () => {
   const [inputValue, setInputValue] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [mode, setMode] = useState<"single" | "lessons">("single");
@@ -78,4 +78,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default ExplainPage;

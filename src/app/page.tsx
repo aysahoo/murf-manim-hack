@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import ShaderBackground from "../components/ShaderBackground";
 import Footer from "../components/Footer";
 
@@ -10,7 +11,7 @@ const page = () => {
         <header className="px-8 py-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-medium text-gray-800">Mona</h2>
-            <a
+            <Link
               href="/explain"
               className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center transition-colors hover:bg-gray-800 cursor-pointer"
             >
@@ -27,7 +28,7 @@ const page = () => {
               >
                 <path d="M12 5v14M5 12h14" />
               </svg>
-            </a>
+            </Link>
           </div>
         </header>
 
@@ -80,7 +81,7 @@ const page = () => {
               <h2 className="text-2xl md:text-3xl font-medium text-gray-800">
                 Featured Work
               </h2>
-              <a
+              <Link
                 href="/library"
                 className="bg-black text-white px-5 py-3 rounded-full flex items-center gap-2 hover:bg-gray-800 transition-colors cursor-pointer"
               >
@@ -98,7 +99,7 @@ const page = () => {
                 >
                   <path d="M5 12h14m-7-7l7 7-7 7" />
                 </svg>
-              </a>
+              </Link>
             </div>
             {/* Portfolio grid would go here */}
           </div>

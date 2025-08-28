@@ -201,12 +201,20 @@ export async function executeCodeAndListFiles(code: string) {
     console.log(`Manim command executed`);
 
     // List files after execution
-    let files: any[] = [];
-    let extractedVideos: { path: string; size: number }[] = [];
+    let files: Array<{ name: string; type: string; size?: number; modifiedTime?: string }> = [];
+    const extractedVideos: { path: string; size: number }[] = [];
+
+    const normalize = (items: Array<Record<string, unknown>>): Array<{ name: string; type: string; size?: number; modifiedTime?: string }> =>
+      items.map((i) => ({
+        name: String(i.name),
+        type: String((i as { type?: unknown }).type ?? ""),
+        size: typeof (i as { size?: unknown }).size === "number" ? ((i as { size?: number }).size) : undefined,
+        modifiedTime: typeof (i as { modifiedTime?: unknown }).modifiedTime === "string" ? ((i as { modifiedTime?: string }).modifiedTime) : undefined,
+      }));
 
     try {
       // List files in /code directory
-      files = await sbx.files.list("/code");
+      files = normalize((await sbx.files.list("/code")) as unknown as Array<Record<string, unknown>>);
 
       // Find the media directory
       const mediaDir = files.find(
@@ -215,7 +223,7 @@ export async function executeCodeAndListFiles(code: string) {
       if (mediaDir) {
         // List files in the media/videos directory
         const videosPath = "/code/media/videos";
-        const videosDirContent = await sbx.files.list(videosPath);
+        const videosDirContent = normalize((await sbx.files.list(videosPath)) as unknown as Array<Record<string, unknown>>);
 
         // Find the most recent video directory (they're named with timestamps)
         const videoDirectories = videosDirContent
@@ -232,16 +240,16 @@ export async function executeCodeAndListFiles(code: string) {
 
         if (videoDirectories.length > 0) {
           const recentVideoDir = videoDirectories[0];
-          const qualityDirs = await sbx.files.list(
+          const qualityDirs = normalize((await sbx.files.list(
             `${videosPath}/${recentVideoDir.name}`
-          );
+          )) as unknown as Array<Record<string, unknown>>);
 
           // Quality directories usually named like "480p15"
           for (const qualityDir of qualityDirs) {
             if (qualityDir.type === "dir") {
-              const videoFiles = await sbx.files.list(
+              const videoFiles = normalize((await sbx.files.list(
                 `${videosPath}/${recentVideoDir.name}/${qualityDir.name}`
-              );
+              )) as unknown as Array<Record<string, unknown>>);
 
               // Find MP4 files
               const mp4Files = videoFiles.filter(
@@ -263,14 +271,11 @@ export async function executeCodeAndListFiles(code: string) {
 
                   if (base64Result.exitCode === 0 && base64Result.stdout) {
                     // Decode base64 content
-                    const fileContent = Buffer.from(
-                      base64Result.stdout.trim(),
-                      "base64"
-                    );
+                    const fileContent = Buffer.from(base64Result.stdout.trim(), "base64");
 
                     // Save to local storage
-                    const fs = require("fs");
-                    const path = require("path");
+                    const fs = await import("fs");
+                    const path = await import("path");
 
                     // Create directories if they don't exist
                     const localDir = path.join(
@@ -278,12 +283,12 @@ export async function executeCodeAndListFiles(code: string) {
                       "public",
                       "videos"
                     );
-                    if (!fs.existsSync(localDir)) {
-                      fs.mkdirSync(localDir, { recursive: true });
+                    if (!fs.default.existsSync(localDir)) {
+                      fs.default.mkdirSync(localDir, { recursive: true });
                     }
 
                     const localFilePath = path.join(localDir, videoFile.name);
-                    fs.writeFileSync(localFilePath, fileContent);
+                    fs.default.writeFileSync(localFilePath, fileContent);
 
                     console.log(
                       `Saved video file locally to: /public/videos/${videoFile.name} (${fileContent.length} bytes)`

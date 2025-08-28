@@ -343,7 +343,9 @@ export async function generateVoiceNarration(
 /**
  * Gets available voices from Murf AI API
  */
-export async function getAvailableVoices(): Promise<any[]> {
+type MurfVoice = { id: string; name: string; language: string; gender?: string; styles?: string[] };
+
+export async function getAvailableVoices(): Promise<MurfVoice[]> {
   try {
     if (!MURF_API_CONFIG.apiKey) {
       throw new Error('Murf AI key not configured');

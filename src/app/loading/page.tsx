@@ -10,9 +10,9 @@ interface ManimResponse {
   topic: string;
   manimCode: string;
   generationMethod: string;
-  execution: any;
-  sandboxFiles: any[];
-  videoFiles: any[];
+  execution: { logs: string[]; error: string | null; results: unknown[] };
+  sandboxFiles: Array<{ name: string; type: string; size?: number; modifiedTime?: string }>;
+  videoFiles: Array<{ path: string; size: number }>;
   videoUrls: string[];
   success: boolean;
 }

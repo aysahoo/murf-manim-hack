@@ -8,8 +8,31 @@ import { convertEscapedNewlines } from '@/utils/formatManimCode';
 import path from 'path';
 import fs from 'fs';
 
+interface LessonItem {
+  part: number;
+  script: string;
+  manim_code: string;
+}
+
+interface ProcessedLesson {
+  part: number;
+  script: string;
+  manim_code: string;
+  videoUrl: string | null;
+  audioUrl: string | null;
+  voiceScript: string;
+  executionSuccess: boolean;
+}
+
+interface GenerateLessonResponse {
+  topic: string;
+  lessons: ProcessedLesson[];
+  totalLessons: number;
+  success: boolean;
+}
+
 // Request deduplication - prevent multiple simultaneous requests for same topic
-const activeRequests = new Map<string, Promise<any>>();
+const activeRequests = new Map<string, Promise<GenerateLessonResponse>>();
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     // Process each lesson to generate video and audio with progressive responses
     // Create response stream for progressive loading
-    const processLessonAsync = async (lesson: any, index: number) => {
+    const processLessonAsync = async (lesson: LessonItem, index: number): Promise<ProcessedLesson> => {
       console.log(`🎬 Processing Part ${lesson.part}: Generating video and audio...`);
 
       try {
@@ -104,7 +127,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Generate voice narration for this lesson
-        let voiceData = null;
+        let voiceData: { audioUrl: string; script: string; segments: Array<{ text: string; duration: number; timestamp: number }>} | null = null;
         if (includeVoice) {
           try {
             console.log(`🎤 Generating voice for Part ${lesson.part}...`);
@@ -144,7 +167,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Process lessons sequentially to prevent file conflicts
-    const processedLessons = [];
+    const processedLessons: ProcessedLesson[] = [];
     
     console.log(`🔄 Processing ${lessonBreakdown.lessons.length} lessons sequentially...`);
     

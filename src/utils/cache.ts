@@ -190,7 +190,7 @@ class TopicCache {
       for (const file of files) {
         const filePath = path.join(this.cacheDir, file);
         try {
-          const cached: CacheEntry<any> = JSON.parse(
+          const cached: CacheEntry<unknown> = JSON.parse(
             fs.readFileSync(filePath, 'utf-8')
           );
 

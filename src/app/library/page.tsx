@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import ShaderBackground from "../../components/ShaderBackground";
 import VideoWithAudio from "../../components/VideoWithAudio";
 import Footer from "../../components/Footer";
@@ -170,7 +171,7 @@ const LibraryPage = () => {
             <h2 className="text-xl md:text-2xl font-medium text-gray-800">
               Mona
             </h2>
-            <a
+            <Link
               href="/explain"
               className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center transition-all duration-200 hover:bg-gray-800 hover:scale-110 cursor-pointer shadow-lg"
               title="Create New Explanation"
@@ -188,7 +189,7 @@ const LibraryPage = () => {
               >
                 <path d="M19 12H5M12 19V5" />
               </svg>
-            </a>
+            </Link>
           </div>
         </header>
 
