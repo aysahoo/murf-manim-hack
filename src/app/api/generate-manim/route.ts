@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateStructuredManimCode, validateAndFixManimCode } from '@/utils/structuredManimGenerator';
 import {convertEscapedNewlines} from '@/utils/formatManimCode';
-import { executeCodeAndListFiles } from '@/utils/sandbox'
+import { executeCodeAndListFiles } from '@/utils/sandbox';
 import path from 'path';
 
 export async function POST(request: NextRequest) {
