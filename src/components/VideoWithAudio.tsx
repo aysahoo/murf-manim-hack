@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from "react";
 
 interface VideoWithAudioProps {
   videoUrl: string;
@@ -22,10 +22,10 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
   audioUrl,
   script,
   segments = [],
-  className = '',
+  className = "",
   autoPlay = false,
   muted = false,
-  onEnded
+  onEnded,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -37,7 +37,6 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [showControls, setShowControls] = useState(false);
   const [audioDuration, setAudioDuration] = useState(0);
-
 
   // Handle video playback events
   useEffect(() => {
@@ -56,17 +55,21 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
       const audio = audioRef.current;
       // If audio is still playing, restart the video immediately
       if (audio && audioUrl && !audio.ended && !audio.paused && isPlaying) {
-        console.log(`Video ended but audio still playing (${audio.currentTime.toFixed(1)}/${audio.duration.toFixed(1)}s) - restarting video`);
+        console.log(
+          `Video ended but audio still playing (${audio.currentTime.toFixed(
+            1
+          )}/${audio.duration.toFixed(1)}s) - restarting video`
+        );
         video.currentTime = 0; // Reset video to beginning
         video.play().catch((error) => {
-          console.error('Failed to restart video:', error);
+          console.error("Failed to restart video:", error);
           // If video restart fails, stop everything
           setIsPlaying(false);
           if (audio) audio.pause();
           if (onEnded) onEnded();
         });
       } else {
-        console.log('Video ended, no audio or audio finished');
+        console.log("Video ended, no audio or audio finished");
         setIsPlaying(false);
         // Only call onEnded if there's no audio (video-only mode)
         if (!audioUrl && onEnded) {
@@ -77,23 +80,32 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
 
     const handleTimeUpdate = () => {
       const audio = audioRef.current;
-      
+
       // If we have audio, use audio time as the primary time source
       if (audio && audioUrl && isPlaying && !audio.paused && !audio.ended) {
         setCurrentTime(audio.currentTime);
-        
+
         // Keep video in sync by looping it when audio goes beyond video length
         if (audio.currentTime > duration && duration > 0) {
           const videoPosition = audio.currentTime % duration;
           if (Math.abs(video.currentTime - videoPosition) > 0.5) {
-            console.log('Video loop sync: Setting video time to', videoPosition);
+            console.log(
+              "Video loop sync: Setting video time to",
+              videoPosition
+            );
             video.currentTime = videoPosition;
           }
         } else {
           // Normal sync when within video duration
           const timeDiff = Math.abs(video.currentTime - audio.currentTime);
-          if (timeDiff > 0.5) { // Increased threshold to reduce frequent resyncing
-            console.log('Resyncing video: Audio time:', audio.currentTime.toFixed(2), 'Video time:', video.currentTime.toFixed(2));
+          if (timeDiff > 0.5) {
+            // Increased threshold to reduce frequent resyncing
+            console.log(
+              "Resyncing video: Audio time:",
+              audio.currentTime.toFixed(2),
+              "Video time:",
+              video.currentTime.toFixed(2)
+            );
             video.currentTime = audio.currentTime;
           }
         }
@@ -107,18 +119,18 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
       setDuration(video.duration);
     };
 
-    video.addEventListener('play', handleVideoPlay);
-    video.addEventListener('pause', handleVideoPause);
-    video.addEventListener('ended', handleVideoEnded);
-    video.addEventListener('timeupdate', handleTimeUpdate);
-    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.addEventListener("play", handleVideoPlay);
+    video.addEventListener("pause", handleVideoPause);
+    video.addEventListener("ended", handleVideoEnded);
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    video.addEventListener("loadedmetadata", handleLoadedMetadata);
 
     return () => {
-      video.removeEventListener('play', handleVideoPlay);
-      video.removeEventListener('pause', handleVideoPause);
-      video.removeEventListener('ended', handleVideoEnded);
-      video.removeEventListener('timeupdate', handleTimeUpdate);
-      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.removeEventListener("play", handleVideoPlay);
+      video.removeEventListener("pause", handleVideoPause);
+      video.removeEventListener("ended", handleVideoEnded);
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
     };
   }, [audioUrl, isPlaying, duration]); // Add dependencies for proper sync
 
@@ -126,10 +138,10 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
   useEffect(() => {
     const video = videoRef.current;
     const audio = audioRef.current;
-    
+
     if (autoPlay && video) {
-      console.log('🎬 Autoplay requested, but waiting for user interaction');
-      
+      console.log("🎬 Autoplay requested, but waiting for user interaction");
+
       // Set up the media but don't play yet
       if (audio && audioUrl) {
         audio.loop = false;
@@ -137,7 +149,7 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
       } else {
         video.loop = true;
       }
-      
+
       // Auto-trigger play after a short delay to attempt autoplay
       // If it fails, user will need to click play button
       const attemptAutoplay = async () => {
@@ -146,25 +158,24 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
             // Reset both to start
             video.currentTime = 0;
             audio.currentTime = 0;
-            
-            await Promise.all([
-              video.play(),
-              audio.play()
-            ]);
-            console.log('✅ Autoplay successful with audio');
+
+            await Promise.all([video.play(), audio.play()]);
+            console.log("✅ Autoplay successful with audio");
           } else {
             video.currentTime = 0;
             await video.play();
-            console.log('✅ Autoplay successful (video only)');
+            console.log("✅ Autoplay successful (video only)");
           }
           setIsPlaying(true);
         } catch (error) {
-          console.log('🔒 Autoplay blocked - user interaction required. Click play to start.');
+          console.log(
+            "🔒 Autoplay blocked - user interaction required. Click play to start."
+          );
           // Don't set error state, just wait for user to click play
           setIsPlaying(false);
         }
       };
-      
+
       const timer = setTimeout(attemptAutoplay, 500);
       return () => clearTimeout(timer);
     }
@@ -173,23 +184,28 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
   const togglePlayback = async () => {
     const video = videoRef.current;
     const audio = audioRef.current;
-    
+
     if (!video) return;
-    
-    console.log('🎮 Toggle playback - isPlaying:', isPlaying, 'audioUrl:', audioUrl ? 'Present' : 'Missing');
-    
+
+    console.log(
+      "🎮 Toggle playback - isPlaying:",
+      isPlaying,
+      "audioUrl:",
+      audioUrl ? "Present" : "Missing"
+    );
+
     if (isPlaying) {
       // Pause both
       setIsPlaying(false);
-      
+
       try {
         video.pause();
         if (audio && audioUrl) {
-          console.log('⏸️ Pausing audio at:', audio.currentTime.toFixed(2));
+          console.log("⏸️ Pausing audio at:", audio.currentTime.toFixed(2));
           audio.pause();
         }
       } catch (error) {
-        console.error('❌ Pause failed:', error);
+        console.error("❌ Pause failed:", error);
       }
     } else {
       // Play both
@@ -199,25 +215,20 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
           const syncTime = Math.max(video.currentTime, audio.currentTime);
           video.currentTime = syncTime;
           audio.currentTime = syncTime;
-          console.log('▶️ Starting playback from:', syncTime.toFixed(2));
-          
-          await Promise.all([
-            video.play(),
-            audio.play()
-          ]);
+          console.log("▶️ Starting playback from:", syncTime.toFixed(2));
+
+          await Promise.all([video.play(), audio.play()]);
         } else {
           await video.play();
         }
-        
+
         setIsPlaying(true);
       } catch (error) {
-        console.error('❌ Play failed:', error);
+        console.error("❌ Play failed:", error);
         setIsPlaying(false);
       }
     }
   };
-
-
 
   const handleSeek = (newTime: number) => {
     const video = videoRef.current;
@@ -227,7 +238,7 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
     // Use the maximum duration (audio or video)
     const maxDuration = audioDuration > duration ? audioDuration : duration;
     const clampedTime = Math.max(0, Math.min(newTime, maxDuration));
-    
+
     // If seeking beyond video length, loop the video to the appropriate position
     if (clampedTime > duration && duration > 0) {
       const videoPosition = clampedTime % duration;
@@ -235,9 +246,9 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
     } else {
       video.currentTime = clampedTime;
     }
-    
+
     setCurrentTime(clampedTime);
-    
+
     if (audio && audioUrl) {
       audio.currentTime = clampedTime;
     }
@@ -258,10 +269,8 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
-
-
 
   const toggleFullscreen = () => {
     const videoContainer = videoRef.current?.parentElement;
@@ -274,13 +283,13 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
     }
   };
 
-
-
   return (
     <div className={`${className}`}>
       {/* Video Container */}
-      <div 
-        className="relative"
+      <div
+        className={`relative ${
+          className?.includes("absolute") ? "w-full h-full" : ""
+        }`}
         onMouseEnter={() => setShowControls(true)}
         onMouseLeave={() => setShowControls(false)}
       >
@@ -297,25 +306,29 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
             preload="metadata"
             width="100%"
             height="auto"
-            style={{ minHeight: '300px' }}
+            style={{
+              minHeight: className?.includes("h-full") ? "auto" : "300px",
+            }}
             onEnded={() => {
               // This will be handled by handleVideoEnded
             }}
-            className="w-full rounded-2xl bg-gray-900"
+            className={`w-full h-full bg-gray-900 object-cover ${
+              className?.includes("absolute") ? "" : "rounded-2xl"
+            }`}
             onError={(e) => {
-              console.error('Video error:', e, 'Video URL:', videoUrl);
-              console.error('Video error details:', {
+              console.error("Video error:", e, "Video URL:", videoUrl);
+              console.error("Video error details:", {
                 error: e,
                 currentSrc: e.currentTarget?.currentSrc,
                 networkState: e.currentTarget?.networkState,
                 readyState: e.currentTarget?.readyState,
-                videoUrl
+                videoUrl,
               });
               setVideoError(true);
             }}
-            onLoadStart={() => console.log('Video load started:', videoUrl)}
-            onLoadedData={() => console.log('Video data loaded:', videoUrl)}
-            onCanPlay={() => console.log('Video can play:', videoUrl)}
+            onLoadStart={() => console.log("Video load started:", videoUrl)}
+            onLoadedData={() => console.log("Video data loaded:", videoUrl)}
+            onCanPlay={() => console.log("Video can play:", videoUrl)}
           />
         ) : (
           <div className="w-full rounded-2xl bg-gray-900 p-4 text-white text-center">
@@ -335,24 +348,38 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
         <div className="absolute inset-0 flex items-center justify-center">
           <button
             onClick={togglePlayback}
-            className={`bg-black/60 hover:bg-black/80 text-white p-6 rounded-full flex items-center justify-center transition-all duration-300 shadow-2xl hover:shadow-3xl hover:scale-105 backdrop-blur-sm border border-white/30 ${isPlaying ? 'opacity-30 hover:opacity-80' : 'opacity-100'}`}
+            className={`bg-black/60 hover:bg-black/80 text-white p-6 rounded-full flex items-center justify-center transition-all duration-300 shadow-2xl hover:shadow-3xl hover:scale-105 backdrop-blur-sm border border-white/30 ${
+              isPlaying ? "opacity-30 hover:opacity-80" : "opacity-100"
+            }`}
           >
             {isPlaying ? (
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
               </svg>
             ) : (
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M8 5v14l11-7z"/>
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M8 5v14l11-7z" />
               </svg>
             )}
           </button>
         </div>
 
-
-
         {/* Video Controls - Minimal, no progress bar */}
-        <div className={`absolute bottom-4 right-4 transition-opacity duration-300 ${showControls || !isPlaying ? 'opacity-100' : 'opacity-0'}`}>
+        <div
+          className={`absolute bottom-4 right-4 transition-opacity duration-300 ${
+            showControls || !isPlaying ? "opacity-100" : "opacity-0"
+          }`}
+        >
           <div className="flex items-center gap-2">
             {/* Speed Control */}
             <div className="flex items-center gap-1 bg-black/50 backdrop-blur-sm rounded px-2 py-1">
@@ -362,12 +389,24 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
                 onChange={(e) => changeSpeed(parseFloat(e.target.value))}
                 className="bg-transparent text-white text-xs border-none outline-none"
               >
-                <option value={0.5} className="bg-black">0.5x</option>
-                <option value={0.75} className="bg-black">0.75x</option>
-                <option value={1} className="bg-black">1x</option>
-                <option value={1.25} className="bg-black">1.25x</option>
-                <option value={1.5} className="bg-black">1.5x</option>
-                <option value={2} className="bg-black">2x</option>
+                <option value={0.5} className="bg-black">
+                  0.5x
+                </option>
+                <option value={0.75} className="bg-black">
+                  0.75x
+                </option>
+                <option value={1} className="bg-black">
+                  1x
+                </option>
+                <option value={1.25} className="bg-black">
+                  1.25x
+                </option>
+                <option value={1.5} className="bg-black">
+                  1.5x
+                </option>
+                <option value={2} className="bg-black">
+                  2x
+                </option>
               </select>
             </div>
 
@@ -377,14 +416,17 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
               className="bg-black/50 hover:bg-black/70 text-white p-2 rounded transition-all duration-200 backdrop-blur-sm"
               title="Toggle Fullscreen"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
               </svg>
             </button>
           </div>
         </div>
-
-
 
         {/* Hidden Audio Element */}
         {audioUrl && (
@@ -396,37 +438,47 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
             onLoadedMetadata={(e) => {
               const audio = e.target as HTMLAudioElement;
               setAudioDuration(audio.duration);
-              console.log('✅ Audio loaded successfully:', audio.duration + 's');
+              console.log(
+                "✅ Audio loaded successfully:",
+                audio.duration + "s"
+              );
             }}
             onCanPlay={() => {
-              console.log('✅ Audio can play');
+              console.log("✅ Audio can play");
             }}
             onError={(e) => {
-              console.error('❌ Audio failed to load:', audioUrl);
-              console.error('Audio error event:', e);
-              console.error('Audio element error:', audioRef.current?.error);
-              
+              console.error("❌ Audio failed to load:", audioUrl);
+              console.error("Audio error event:", e);
+              console.error("Audio element error:", audioRef.current?.error);
+
               // Check if file exists by trying to fetch it
               if (audioUrl) {
                 fetch(audioUrl)
-                  .then(response => {
+                  .then((response) => {
                     if (!response.ok) {
-                      console.error(`❌ Audio file not found: ${response.status} ${response.statusText}`);
+                      console.error(
+                        `❌ Audio file not found: ${response.status} ${response.statusText}`
+                      );
                     } else {
-                      console.error('❌ Audio file exists but failed to load as audio');
-                      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                      console.error(
+                        "❌ Audio file exists but failed to load as audio"
+                      );
+                      console.log(
+                        "Response headers:",
+                        Object.fromEntries(response.headers.entries())
+                      );
                     }
                   })
-                  .catch(fetchError => {
-                    console.error('❌ Failed to check audio file:', fetchError);
+                  .catch((fetchError) => {
+                    console.error("❌ Failed to check audio file:", fetchError);
                   });
               }
-              
+
               // Continue with video-only playback on audio error
-              console.log('🎬 Continuing with video-only playback');
+              console.log("🎬 Continuing with video-only playback");
             }}
             onEnded={() => {
-              console.log('Audio playback completed');
+              console.log("Audio playback completed");
               const video = videoRef.current;
               if (video && !video.paused) {
                 video.pause(); // Stop video when audio ends
@@ -442,12 +494,12 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
 
         {/* Show helpful message */}
         {!isPlaying && (
-          <div className="absolute bottom-16 left-4 bg-black/60 text-white p-3 rounded-lg text-sm backdrop-blur-sm border border-white/20">
-            {autoPlay ? '🔒 Click play to start (autoplay blocked)' : 'Click play to begin'}
+          <div className="absolute bottom-3 left-2 bg-black/60 text-white p-3 rounded-lg text-xs backdrop-blur-sm border border-white/20">
+            {autoPlay
+              ? "🔒 Click play to start (autoplay blocked)"
+              : "Click play to begin"}
           </div>
         )}
-
-
       </div>
     </div>
   );

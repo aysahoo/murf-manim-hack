@@ -7,6 +7,7 @@ import SubmittedTopicTitle from "../../../components/SubmittedTopicTitle";
 import Navbar from "../../../components/Navbar";
 import VideoWithAudio from "../../../components/VideoWithAudio";
 import LessonBreakdown from "../../../components/LessonBreakdown";
+import Footer from "../../../components/Footer";
 
 interface Lesson {
   part: number;
@@ -18,16 +19,20 @@ const TopicPage = () => {
   const params = useParams<{ topic: string }>();
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") || "single";
-  
+
   // Single video mode state
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [voiceScript, setVoiceScript] = useState<string | null>(null);
-  const [voiceSegments, setVoiceSegments] = useState<Array<{ text: string; duration: number; timestamp: number }> | null>(null);
-  
+  const [voiceSegments, setVoiceSegments] = useState<Array<{
+    text: string;
+    duration: number;
+    timestamp: number;
+  }> | null>(null);
+
   // Lesson mode state
   const [lessons, setLessons] = useState<Lesson[]>([]);
-  
+
   // Common state
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,61 +41,61 @@ const TopicPage = () => {
     ? decodeURIComponent(params.topic[0])
     : decodeURIComponent(params.topic || "");
 
-  console.log('TopicPage component loaded, topic:', topic);
+  console.log("TopicPage component loaded, topic:", topic);
 
   useEffect(() => {
-    console.log('useEffect triggered, topic:', topic, 'mode:', mode);
-    
+    console.log("useEffect triggered, topic:", topic, "mode:", mode);
+
     // Check for lesson data first
     if (mode === "lessons") {
-      const storedLessons = sessionStorage.getItem('generatedLessons');
+      const storedLessons = sessionStorage.getItem("generatedLessons");
       if (storedLessons) {
         try {
           const data = JSON.parse(storedLessons);
-          console.log('Using stored lesson data:', data);
-          
+          console.log("Using stored lesson data:", data);
+
           setLessons(data.lessons || []);
           setLoading(false);
-          
+
           // Clear the stored data
-          sessionStorage.removeItem('generatedLessons');
+          sessionStorage.removeItem("generatedLessons");
           return;
         } catch (error) {
-          console.error('Error parsing stored lesson data:', error);
-          sessionStorage.removeItem('generatedLessons');
+          console.error("Error parsing stored lesson data:", error);
+          sessionStorage.removeItem("generatedLessons");
         }
       }
     } else {
       // Check for video data (existing logic)
-      const storedData = sessionStorage.getItem('generatedVideo');
+      const storedData = sessionStorage.getItem("generatedVideo");
       if (storedData) {
         try {
           const data = JSON.parse(storedData);
-          console.log('Using stored video data:', data);
-          
+          console.log("Using stored video data:", data);
+
           setVideoUrl(data.videoUrl);
           setAudioUrl(data.audioUrl);
           setVoiceScript(data.script);
           setVoiceSegments(data.segments);
           setLoading(false);
-          
+
           // Clear the stored data
-          sessionStorage.removeItem('generatedVideo');
+          sessionStorage.removeItem("generatedVideo");
           return;
         } catch (error) {
-          console.error('Error parsing stored data:', error);
-          sessionStorage.removeItem('generatedVideo');
+          console.error("Error parsing stored data:", error);
+          sessionStorage.removeItem("generatedVideo");
         }
       }
     }
-    
+
     const generateContent = async () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         if (mode === "lessons") {
-          console.log('Generating lessons for topic:', topic);
+          console.log("Generating lessons for topic:", topic);
 
           const res = await fetch("/api/generate-lesson", {
             method: "POST",
@@ -99,17 +104,17 @@ const TopicPage = () => {
           });
 
           const data = await res.json();
-          console.log('Lesson API response:', data);
+          console.log("Lesson API response:", data);
 
           if (data && data.lessons && Array.isArray(data.lessons)) {
             setLessons(data.lessons);
             setLoading(false);
             return;
           } else {
-            throw new Error('Invalid lesson data received');
+            throw new Error("Invalid lesson data received");
           }
         } else {
-          console.log('Generating video for topic:', topic);
+          console.log("Generating video for topic:", topic);
 
           const res = await fetch("/api/generate-manim", {
             method: "POST",
@@ -118,64 +123,74 @@ const TopicPage = () => {
           });
 
           const data = await res.json();
-          console.log('API response data:', data);
+          console.log("API response data:", data);
 
           // Check if we have video files regardless of success flag
           if (data.videoFiles && data.videoFiles.length > 0) {
             const videoFile = data.videoFiles[0];
-            const fileName = videoFile.path.split('/').pop();
+            const fileName = videoFile.path.split("/").pop();
             const videoUrl = `/videos/${fileName}`;
-            
-            console.log('Setting video URL:', videoUrl);
+
+            console.log("Setting video URL:", videoUrl);
             setVideoUrl(videoUrl);
-            
+
             // Set audio data if available
             if (data.voiceData) {
               setAudioUrl(data.voiceData.audioUrl);
               setVoiceScript(data.voiceData.script);
               setVoiceSegments(data.voiceData.segments);
-              console.log('Setting audio URL:', data.voiceData.audioUrl);
+              console.log("Setting audio URL:", data.voiceData.audioUrl);
             }
-            
+
             setLoading(false);
             return;
           }
 
           // If no video files, try using the videoUrls
           if (data.videoUrls && data.videoUrls.length > 0) {
-            console.log('Using videoUrls:', data.videoUrls[0]);
+            console.log("Using videoUrls:", data.videoUrls[0]);
             setVideoUrl(data.videoUrls[0]);
-            
+
             // Set audio data if available
             if (data.voiceData) {
               setAudioUrl(data.voiceData.audioUrl);
               setVoiceScript(data.voiceData.script);
               setVoiceSegments(data.voiceData.segments);
-              console.log('Setting audio URL:', data.voiceData.audioUrl);
+              console.log("Setting audio URL:", data.voiceData.audioUrl);
             }
-            
+
             setLoading(false);
             return;
           }
 
           // If nothing works, use fallback
-          console.warn('No video generated, using fallback');
-          const fallbackVideos = ['/videos/SimpleCircleAnimation.mp4', '/videos/GravityScene.mp4', '/videos/EntropyScene.mp4'];
-          const randomFallback = fallbackVideos[Math.floor(Math.random() * fallbackVideos.length)];
+          console.warn("No video generated, using fallback");
+          const fallbackVideos = [
+            "/videos/SimpleCircleAnimation.mp4",
+            "/videos/GravityScene.mp4",
+            "/videos/EntropyScene.mp4",
+          ];
+          const randomFallback =
+            fallbackVideos[Math.floor(Math.random() * fallbackVideos.length)];
           setVideoUrl(randomFallback);
-          setError('Video generation had issues. Using fallback video.');
+          setError("Video generation had issues. Using fallback video.");
         }
       } catch (error) {
-        console.error('Error generating content:', error);
-        
+        console.error("Error generating content:", error);
+
         if (mode === "lessons") {
-          setError('Failed to generate lesson breakdown.');
+          setError("Failed to generate lesson breakdown.");
         } else {
-          setError('Failed to generate video. Using fallback.');
-          
+          setError("Failed to generate video. Using fallback.");
+
           // Use fallback video for single mode
-          const fallbackVideos = ['/videos/SimpleCircleAnimation.mp4', '/videos/GravityScene.mp4', '/videos/EntropyScene.mp4'];
-          const randomFallback = fallbackVideos[Math.floor(Math.random() * fallbackVideos.length)];
+          const fallbackVideos = [
+            "/videos/SimpleCircleAnimation.mp4",
+            "/videos/GravityScene.mp4",
+            "/videos/EntropyScene.mp4",
+          ];
+          const randomFallback =
+            fallbackVideos[Math.floor(Math.random() * fallbackVideos.length)];
           setVideoUrl(randomFallback);
         }
       } finally {
@@ -197,17 +212,19 @@ const TopicPage = () => {
       <div className="relative z-10 min-h-screen flex flex-col">
         <Navbar showBackButton={true} />
         <main className="flex-1 flex flex-col w-full">
-          <SubmittedTopicTitle topic={topic} mode={mode as "single" | "lessons"} />
+          <SubmittedTopicTitle
+            topic={topic}
+            mode={mode as "single" | "lessons"}
+          />
           <div className="mt-10 flex justify-center px-6">
             <div className="max-w-5xl w-full">
               {loading && (
                 <div className="text-center text-gray-700">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mx-auto"></div>
                   <p className="mt-4">
-                    {mode === "lessons" 
-                      ? "Generating your lesson breakdown..." 
-                      : "Loading your generated content..."
-                    }
+                    {mode === "lessons"
+                      ? "Generating your lesson breakdown..."
+                      : "Loading your generated content..."}
                   </p>
                 </div>
               )}
@@ -253,6 +270,9 @@ const TopicPage = () => {
             </div>
           </div>
         </main>
+
+        {/* Footer */}
+        <Footer />
       </div>
     </ShaderBackground>
   );
