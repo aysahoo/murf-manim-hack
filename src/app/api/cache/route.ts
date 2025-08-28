@@ -1,51 +1,44 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { topicCache } from '@/utils/cache';
+import { NextRequest, NextResponse } from "next/server";
+import { blobStorage } from "@/utils/blobStorage";
 
 export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
-    const action = url.searchParams.get('action');
+    const action = url.searchParams.get("action");
 
     switch (action) {
-      case 'stats':
-        const stats = await topicCache.getCacheStats();
+      case "list":
+        const data = await blobStorage.listAllData();
         return NextResponse.json({
           success: true,
-          stats,
-          message: 'Cache statistics retrieved successfully'
+          data,
+          message: "Data list retrieved successfully",
         });
 
-      case 'clear':
-        await topicCache.clearAllCache();
+      case "clear":
+        await blobStorage.clearAllData();
         return NextResponse.json({
           success: true,
-          message: 'All cache cleared successfully'
-        });
-
-      case 'cleanup':
-        await topicCache.clearExpiredCache();
-        return NextResponse.json({
-          success: true,
-          message: 'Expired cache entries cleared successfully'
+          message: "All data cleared successfully",
         });
 
       default:
-        // Default: return cache stats
-        const defaultStats = await topicCache.getCacheStats();
+        // Default: return data list
+        const defaultData = await blobStorage.listAllData();
         return NextResponse.json({
           success: true,
-          stats: defaultStats,
-          availableActions: ['stats', 'clear', 'cleanup'],
-          message: 'Cache management API. Use ?action=stats|clear|cleanup'
+          data: defaultData,
+          availableActions: ["list", "clear"],
+          message: "Data management API. Use ?action=list|clear",
         });
     }
   } catch (error) {
-    console.error('Cache management error:', error);
+    console.error("Data management error:", error);
     return NextResponse.json(
-      { 
+      {
         success: false,
-        error: 'Failed to manage cache',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: "Failed to manage data",
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -57,36 +50,28 @@ export async function POST(request: NextRequest) {
     const { action } = await request.json();
 
     switch (action) {
-      case 'clear':
-        await topicCache.clearAllCache();
+      case "clear":
+        await blobStorage.clearAllData();
         return NextResponse.json({
           success: true,
-          message: 'All cache cleared successfully'
-        });
-
-      case 'cleanup':
-        await topicCache.clearExpiredCache();
-        return NextResponse.json({
-          success: true,
-          message: 'Expired cache entries cleared successfully'
+          message: "All data cleared successfully",
         });
 
       default:
         return NextResponse.json(
-          { error: 'Invalid action. Use "clear" or "cleanup"' },
+          { error: 'Invalid action. Use "clear"' },
           { status: 400 }
         );
     }
   } catch (error) {
-    console.error('Cache management error:', error);
+    console.error("Data management error:", error);
     return NextResponse.json(
-      { 
+      {
         success: false,
-        error: 'Failed to manage cache',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: "Failed to manage data",
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
   }
 }
-
