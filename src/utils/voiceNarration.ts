@@ -388,20 +388,24 @@ export async function textToSpeech(
 }
 
 /**
- * Saves audio data to a file
+ * Saves audio data to blob storage
  */
-export function saveAudioFile(audioData: Buffer, filename: string): string {
-  const audioDir = path.join(process.cwd(), "public", "audio");
-
-  // Create audio directory if it doesn't exist
-  if (!fs.existsSync(audioDir)) {
-    fs.mkdirSync(audioDir, { recursive: true });
+export async function saveAudioFile(
+  audioData: Buffer,
+  filename: string,
+  topic: string
+): Promise<string> {
+  try {
+    const blobResult = await blobStorage.storeAudioFile(
+      topic,
+      audioData,
+      filename
+    );
+    return blobResult.url;
+  } catch (error) {
+    console.error("Error saving audio file to blob storage:", error);
+    throw new Error("Failed to save audio file to blob storage");
   }
-
-  const filePath = path.join(audioDir, filename);
-  fs.writeFileSync(filePath, audioData);
-
-  return `/audio/${filename}`;
 }
 
 /**
@@ -471,7 +475,11 @@ export async function generateVoiceNarration(
     // Save audio file
     const safeTopic = topic.toLowerCase().replace(/[^a-z0-9]/g, "_");
     const audioFilename = `${safeTopic}_${Date.now()}.mp3`;
-    const audioUrl = saveAudioFile(audioResult.audioData, audioFilename);
+    const audioUrl = await saveAudioFile(
+      audioResult.audioData,
+      audioFilename,
+      topic
+    );
 
     return {
       audioUrl,

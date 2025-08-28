@@ -215,6 +215,43 @@ class BlobStorage {
     }
   }
 
+  // Audio File Storage
+  async storeAudioFile(
+    topic: string,
+    audioBuffer: Buffer,
+    filename: string
+  ): Promise<{
+    filename: string;
+    url: string;
+    size: number;
+    contentType: string;
+  }> {
+    try {
+      const safeTopic = topic.toLowerCase().replace(/[^a-z0-9]/g, "_");
+      const timestamp = Date.now();
+      const audioFilename = `${safeTopic}_${timestamp}_${filename}`;
+
+      const blob = await put(`audio/${audioFilename}`, audioBuffer, {
+        access: "public",
+        contentType: "audio/mpeg",
+        addRandomSuffix: false,
+      });
+
+      const audioData = {
+        filename: audioFilename,
+        url: blob.url,
+        size: audioBuffer.length,
+        contentType: "audio/mpeg",
+      };
+
+      console.log(`Stored audio file for topic: ${topic} at ${blob.url}`);
+      return audioData;
+    } catch (error) {
+      console.error("Error storing audio file to blob:", error);
+      throw error;
+    }
+  }
+
   async getVideoFiles(topic: string): Promise<VideoFileData[]> {
     try {
       const safeTopic = topic.toLowerCase().replace(/[^a-z0-9]/g, "_");
