@@ -17,8 +17,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Storage is handled automatically by blob storage
-
-    // Generate structured Manim code (with built-in fallback)
     const manimCode = await generateStructuredManimCode(topic);
     const validatedCode = validateAndFixManimCode(manimCode);
     const multilineCode = convertEscapedNewlines(validatedCode);
@@ -49,68 +47,29 @@ export async function POST(request: NextRequest) {
             "Murf AI voice generation successful:",
             voiceData.audioUrl
           );
-        } else {
-          console.log(
-            "Murf AI voice generation skipped (API key not configured), using fallback script data"
-          );
         }
-      } catch (error) {
-        console.error("Murf AI voice generation failed:", error);
-        console.log(
-          "🔇 Continuing without voice narration - check Murf API key"
-        );
-        // Voice generation failed, but script was still generated
+      } catch (voiceError) {
+        console.error("Error generating voice narration:", voiceError);
+        console.log("Continuing without voice narration");
         voiceData = null;
       }
-    }
-
-    // If no video was generated, use existing fallback videos
-    if (!videoUrls.length) {
-      console.log("🎬 No video generated, using fallback videos...");
-      const fallbackVideos = [
-        "/videos/SimpleCircleAnimation.mp4",
-        "/videos/GravityScene.mp4",
-        "/videos/EntropyScene.mp4",
-        "/videos/BasicMathScene.mp4",
-      ];
-
-      // Pick a fallback video based on topic
-      const topicLower = topic.toLowerCase();
-      let selectedFallback = fallbackVideos[0]; // default
-
-      if (topicLower.includes("math") || topicLower.includes("equation")) {
-        selectedFallback = "/videos/BasicMathScene.mp4";
-      } else if (
-        topicLower.includes("gravity") ||
-        topicLower.includes("physics")
-      ) {
-        selectedFallback = "/videos/GravityScene.mp4";
-      } else if (
-        topicLower.includes("entropy") ||
-        topicLower.includes("thermodynamics")
-      ) {
-        selectedFallback = "/videos/EntropyScene.mp4";
-      }
-
-      videoUrls = [selectedFallback];
     }
 
     return NextResponse.json({
       topic,
       manimCode: multilineCode,
-      generationMethod: result.success ? "structured" : "fallback",
+      generationMethod: result.success ? "structured" : "sandbox_error",
       execution: result.execution,
       sandboxFiles: result.files,
       videoFiles: result.videoFiles || [],
       videoUrls,
       voiceData,
-      success: true, // Always return success with fallbacks
-      fallbackUsed: !result.success || !voiceData?.audioUrl,
+      success: true,
     });
   } catch (error) {
     console.error("Error generating Manim code:", error);
     return NextResponse.json(
-      { error: "Failed to generate Manim code" },
+      { error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
   }

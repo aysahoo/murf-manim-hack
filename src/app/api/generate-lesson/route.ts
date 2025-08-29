@@ -26,6 +26,62 @@ interface GenerateLessonResponse {
 // Request deduplication - prevent multiple simultaneous requests for same topic
 const activeRequests = new Map<string, Promise<GenerateLessonResponse>>();
 
+// Debug endpoint for testing individual parts
+export async function PATCH(request: NextRequest) {
+  try {
+    const { topic, part } = await request.json();
+
+    if (!topic || !part) {
+      return NextResponse.json(
+        { error: "Topic and part are required" },
+        { status: 400 }
+      );
+    }
+
+    console.log(`🔧 Testing video generation for ${topic} Part ${part}`);
+
+    // Get lesson breakdown
+    const lessonBreakdown = await generateLessonBreakdown(topic);
+    const targetLesson = lessonBreakdown.lessons.find((l) => l.part === part);
+
+    if (!targetLesson) {
+      return NextResponse.json(
+        { error: `Part ${part} not found for topic ${topic}` },
+        { status: 404 }
+      );
+    }
+
+    console.log(
+      `Found lesson for Part ${part}:`,
+      targetLesson.script.substring(0, 100) + "..."
+    );
+
+    // Validate and fix the Manim code
+    let validatedCode = validateAndFixManimCode(targetLesson.manim_code);
+    const multilineCode = convertEscapedNewlines(validatedCode);
+
+    console.log(`Testing Manim code execution for Part ${part}...`);
+
+    // Test execution
+    const result = await executeCodeAndListFiles(multilineCode);
+
+    return NextResponse.json({
+      part,
+      script: targetLesson.script,
+      manimCode: multilineCode,
+      executionResult: result,
+      videoCount: result.videoFiles?.length || 0,
+      videos: result.videoFiles || [],
+    });
+  } catch (error) {
+    console.error("Error in debug endpoint:", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { topic, includeVoice = true } = await request.json();
@@ -61,10 +117,11 @@ export async function POST(request: NextRequest) {
 
       // Process each lesson to generate video and audio with progressive responses
       // Create response stream for progressive loading
-      const processLessonAsync = async (
-        lesson: { part: number; script: string; manim_code: string },
-        index: number
-      ) => {
+      const processLessonAsync = async (lesson: {
+        part: number;
+        script: string;
+        manim_code: string;
+      }) => {
         console.log(
           `🎬 Processing Part ${lesson.part}: Generating video and audio...`
         );
@@ -73,11 +130,33 @@ export async function POST(request: NextRequest) {
           // Validate and fix the Manim code for 15-second duration
           let validatedCode = validateAndFixManimCode(lesson.manim_code);
 
-          // Extend animation durations to 15 seconds total
+          // Log the original and validated code for debugging
+          console.log(
+            `Original Manim code for Part ${lesson.part}:`,
+            lesson.manim_code.substring(0, 200) + "..."
+          );
+          console.log(
+            `Validated Manim code for Part ${lesson.part}:`,
+            validatedCode.substring(0, 200) + "..."
+          );
+
+          // Extend animation durations to 15 seconds total - but be more careful about replacements
           validatedCode = validatedCode
             .replace(/run_time=\d+(\.\d+)?/g, "run_time=2.5")
             .replace(/self\.wait\(\d+(\.\d+)?\)/g, "self.wait(1.5)")
             .replace(/self\.wait\(1\.5\)\s*$/m, "self.wait(3)"); // Longer final wait
+
+          // Ensure we have proper scene class naming
+          const sceneClassName = `Part${lesson.part}`;
+          validatedCode = validatedCode.replace(
+            /class\s+\w+\s*\(Scene\):/,
+            `class ${sceneClassName}(Scene):`
+          );
+
+          console.log(
+            `Final Manim code for Part ${lesson.part}:`,
+            validatedCode.substring(0, 300) + "..."
+          );
 
           const multilineCode = convertEscapedNewlines(validatedCode);
 
@@ -94,16 +173,7 @@ export async function POST(request: NextRequest) {
               `✅ Using blob storage video for Part ${lesson.part}: ${videoUrl}`
             );
           } else {
-            console.warn(
-              `⚠️ No video generated for Part ${lesson.part}, using fallback`
-            );
-            // Use available fallback videos from public/videos
-            const fallbackVideos = [
-              "/videos/Part1.mp4",
-              "/videos/Part3.mp4",
-              "/videos/TopicScene.mp4",
-            ];
-            videoUrl = fallbackVideos[index % fallbackVideos.length];
+            console.warn(`⚠️ No video generated for Part ${lesson.part}`);
           }
 
           // Generate voice narration for this lesson
@@ -142,21 +212,18 @@ export async function POST(request: NextRequest) {
             `❌ Error processing Part ${lesson.part}:`,
             lessonError
           );
-
-          // Return lesson with fallback video
-          const fallbackVideos = [
-            "/videos/Part1.mp4",
-            "/videos/Part3.mp4",
-            "/videos/TopicScene.mp4",
-          ];
           return {
             part: lesson.part,
             script: lesson.script,
             manim_code: lesson.manim_code,
-            videoUrl: fallbackVideos[index % fallbackVideos.length],
+            videoUrl: null,
             audioUrl: null,
             voiceScript: lesson.script,
             executionSuccess: false,
+            error:
+              lessonError instanceof Error
+                ? lessonError.message
+                : "Unknown error",
           };
         }
       };
@@ -176,7 +243,7 @@ export async function POST(request: NextRequest) {
           })...`
         );
 
-        const processedLesson = await processLessonAsync(lesson, i);
+        const processedLesson = await processLessonAsync(lesson);
         processedLessons.push(processedLesson);
 
         console.log(
@@ -228,12 +295,26 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const topic = searchParams.get("topic");
+    const clearCache = searchParams.get("clear") === "true";
 
     if (!topic) {
       return NextResponse.json(
         { error: "Topic query parameter is required" },
         { status: 400 }
       );
+    }
+
+    // Clear cache if requested
+    if (clearCache) {
+      console.log(`Clearing cache for topic: ${topic}`);
+      try {
+        await blobStorage.deleteData("lesson", topic);
+        await blobStorage.deleteData("manim", topic);
+        await blobStorage.deleteData("voice", topic);
+        console.log(`Cache cleared for topic: ${topic}`);
+      } catch (clearError) {
+        console.warn("Error clearing cache:", clearError);
+      }
     }
 
     // Try to get from storage only
