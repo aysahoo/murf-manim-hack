@@ -17,9 +17,6 @@ export default function ShaderBackground({ children }: ShaderBackgroundProps) {
     // Generate random seed for grain effect on client side only
     setGrainSeed(Math.random() * 1000);
   }, []);
-
-
-
   return (
     <div
       ref={containerRef}

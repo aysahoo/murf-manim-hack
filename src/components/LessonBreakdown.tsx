@@ -99,7 +99,7 @@ const LessonBreakdown: React.FC<LessonBreakdownProps> = ({
       >
         {/* Video Player - No background box */}
         <div>
-          {currentLessonData.videoUrl && (
+          {currentLessonData.videoUrl ? (
             <VideoWithAudio
               videoUrl={currentLessonData.videoUrl}
               audioUrl={currentLessonData.audioUrl}
@@ -107,6 +107,19 @@ const LessonBreakdown: React.FC<LessonBreakdownProps> = ({
               autoPlay={autoPlay}
               onEnded={handleLessonComplete}
             />
+          ) : (
+            <div className="w-full h-96 bg-gray-200 rounded-xl flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-lg text-gray-600 mb-2">
+                  {currentLessonData.executionSuccess === false ? 
+                    "Video generation failed" : 
+                    "No video available"}
+                </div>
+                <div className="text-sm text-gray-500">
+                  Part {currentLesson} of {lessons.length}
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </motion.div>

@@ -329,6 +329,29 @@ export async function executeCodeAndListFiles(code: string) {
                         `Error uploading video file to blob storage: ${videoFilePath}`,
                         blobError
                       );
+                      
+                      // Fallback: Save locally for development if blob storage fails
+                      if (process.env.NODE_ENV === 'development') {
+                        console.log('Falling back to local storage for development...');
+                        const fs = await import('fs');
+                        const path = await import('path');
+                        
+                        try {
+                          const publicDir = path.join(process.cwd(), 'public', 'videos');
+                          await fs.promises.mkdir(publicDir, { recursive: true });
+                          
+                          const localPath = path.join(publicDir, videoFile.name);
+                          await fs.promises.writeFile(localPath, fileContent);
+                          
+                          console.log(`Saved video locally: ${localPath}`);
+                          extractedVideos.push({
+                            path: `/videos/${videoFile.name}`, // Local URL for development
+                            size: fileContent.length,
+                          });
+                        } catch (localError) {
+                          console.error('Failed to save video locally:', localError);
+                        }
+                      }
                     }
                   } else {
                     console.error(
