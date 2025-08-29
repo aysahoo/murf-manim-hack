@@ -129,8 +129,8 @@ const TopicPageContent = () => {
           // Check if we have video files regardless of success flag
           if (data.videoFiles && data.videoFiles.length > 0) {
             const videoFile = data.videoFiles[0];
-            const fileName = videoFile.path.split("/").pop();
-            const videoUrl = `/videos/${fileName}`;
+            // Use the path directly as it's already a blob storage URL
+            const videoUrl = videoFile.path;
 
             console.log("Setting video URL:", videoUrl);
             setVideoUrl(videoUrl);
@@ -160,35 +160,17 @@ const TopicPageContent = () => {
             return;
           }
 
-          // If nothing works, use fallback
-          console.warn("No video generated, using fallback");
-          const fallbackVideos = [
-            "/videos/SimpleCircleAnimation.mp4",
-            "/videos/GravityScene.mp4",
-            "/videos/EntropyScene.mp4",
-          ];
-          const randomFallback =
-            fallbackVideos[Math.floor(Math.random() * fallbackVideos.length)];
-          setVideoUrl(randomFallback);
-          setError("Video generation had issues. Using fallback video.");
+          // If no video was generated, show error message
+          console.warn("No video generated");
+          setError("Video generation completed but no video file was created. Please try again.");
         }
       } catch (error) {
         console.error("Error generating content:", error);
 
         if (mode === "lessons") {
-          setError("Failed to generate lesson breakdown.");
+          setError("Failed to generate lesson breakdown. Please check your API configuration and try again.");
         } else {
-          setError("Failed to generate video. Using fallback.");
-
-          // Use fallback video for single mode
-          const fallbackVideos = [
-            "/videos/SimpleCircleAnimation.mp4",
-            "/videos/GravityScene.mp4",
-            "/videos/EntropyScene.mp4",
-          ];
-          const randomFallback =
-            fallbackVideos[Math.floor(Math.random() * fallbackVideos.length)];
-          setVideoUrl(randomFallback);
+          setError("Failed to generate video. Please check your API configuration and try again.");
         }
       } finally {
         setLoading(false);

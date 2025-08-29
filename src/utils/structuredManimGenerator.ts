@@ -1,251 +1,7 @@
 import { z } from "zod";
 import { blobStorage } from "./blobStorage";
-
-// Fallback Manim code when API is down
-function getFallbackManimCode(topic: string): string {
-  const topicLower = topic.toLowerCase();
-
-  if (
-    topicLower.includes("math") ||
-    topicLower.includes("addition") ||
-    topicLower.includes("equation")
-  ) {
-    return `from manim import *
-
-class MathScene(Scene):
-    def construct(self):
-        # Create a simple math equation
-        equation = MathTex("2 + 3 = 5")
-        equation.scale(2)
-        
-        # Animate the equation
-        self.play(Write(equation))
-        self.wait(1)
-        
-        # Transform to show process
-        equation2 = MathTex("2", "+", "3", "=", "5")
-        equation2.scale(2)
-        
-        self.play(Transform(equation, equation2))
-        self.wait(1)
-        
-        # Highlight the result
-        self.play(equation[4].animate.set_color(YELLOW))
-        self.wait(2)`;
-  }
-
-  if (topicLower.includes("circle") || topicLower.includes("geometry")) {
-    return `from manim import *
-
-class CircleScene(Scene):
-    def construct(self):
-        # Create a circle
-        circle = Circle(radius=2, color=BLUE)
-        
-        # Create title
-        title = Text("Circle", font_size=48)
-        title.to_edge(UP)
-        
-        # Animate
-        self.play(Write(title))
-        self.play(Create(circle))
-        self.wait(1)
-        
-        # Show radius
-        radius = Line(circle.get_center(), circle.get_right(), color=RED)
-        radius_label = Text("r", font_size=36, color=RED)
-        radius_label.next_to(radius, DOWN)
-        
-        self.play(Create(radius), Write(radius_label))
-        self.wait(2)`;
-  }
-
-  if (topicLower.includes("gravity") || topicLower.includes("physics")) {
-    return `from manim import *
-
-class GravityScene(Scene):
-    def construct(self):
-        # Create title
-        title = Text("Gravity", font_size=48, color=BLUE)
-        title.to_edge(UP)
-        
-        # Create objects
-        earth = Circle(radius=1, color=GREEN, fill_opacity=0.8)
-        apple = Circle(radius=0.2, color=RED, fill_opacity=1)
-        
-        # Position objects
-        earth.shift(DOWN * 2)
-        apple.shift(UP * 2)
-        
-        # Create force arrow
-        force_arrow = Arrow(apple.get_center(), earth.get_center(), color=YELLOW)
-        force_label = Text("F = mg", font_size=24, color=YELLOW)
-        force_label.next_to(force_arrow, RIGHT)
-        
-        # Animate
-        self.play(Write(title))
-        self.play(Create(earth), Create(apple))
-        self.wait(0.5)
-        self.play(Create(force_arrow), Write(force_label))
-        self.wait(1)
-        
-        # Show falling motion
-        self.play(apple.animate.move_to(earth.get_center() + UP * 1.3))
-        self.wait(2)`;
-  }
-
-  if (
-    topicLower.includes("list") ||
-    topicLower.includes("array") ||
-    topicLower.includes("data")
-  ) {
-    return `from manim import *
-
-class ListScene(Scene):
-    def construct(self):
-        # Create title
-        title = Text("Lists", font_size=48, color=BLUE)
-        title.to_edge(UP)
-        
-        # Create simple list boxes
-        box1 = Rectangle(width=1, height=1, color=WHITE)
-        text1 = Text("A", font_size=36)
-        item1 = VGroup(box1, text1)
-        item1.shift(LEFT * 2)
-        
-        box2 = Rectangle(width=1, height=1, color=WHITE)
-        text2 = Text("B", font_size=36)
-        item2 = VGroup(box2, text2)
-        
-        box3 = Rectangle(width=1, height=1, color=WHITE)
-        text3 = Text("C", font_size=36)
-        item3 = VGroup(box3, text3)
-        item3.shift(RIGHT * 2)
-        
-        # Create indices
-        index1 = Text("0", font_size=24, color=GRAY)
-        index1.next_to(item1, DOWN)
-        
-        index2 = Text("1", font_size=24, color=GRAY)
-        index2.next_to(item2, DOWN)
-        
-        index3 = Text("2", font_size=24, color=GRAY)
-        index3.next_to(item3, DOWN)
-        
-        # Animate
-        self.play(Write(title))
-        self.wait(0.5)
-        self.play(Create(item1), Create(item2), Create(item3))
-        self.wait(0.5)
-        self.play(Write(index1), Write(index2), Write(index3))
-        self.wait(1)
-        
-        # Highlight elements
-        self.play(item1[0].animate.set_color(YELLOW))
-        self.wait(0.5)
-        self.play(item1[0].animate.set_color(WHITE))
-        
-        self.play(item2[0].animate.set_color(YELLOW))
-        self.wait(0.5)
-        self.play(item2[0].animate.set_color(WHITE))
-        
-        self.play(item3[0].animate.set_color(YELLOW))
-        self.wait(0.5)
-        self.play(item3[0].animate.set_color(WHITE))
-        
-        self.wait(1)`;
-  }
-
-  if (topicLower.includes("tuple") || topicLower.includes("pair")) {
-    return `from manim import *
-
-class TupleScene(Scene):
-    def construct(self):
-        # Create title
-        title = Text("Tuples", font_size=48, color=PURPLE)
-        title.to_edge(UP)
-        
-        # Create tuple with parentheses
-        left_paren = Text("(", font_size=72, color=WHITE)
-        left_paren.shift(LEFT * 2.5)
-        
-        right_paren = Text(")", font_size=72, color=WHITE)
-        right_paren.shift(RIGHT * 2.5)
-        
-        # Create tuple elements
-        text1 = Text("A", font_size=36, color=YELLOW)
-        text1.shift(LEFT * 1.5)
-        
-        comma1 = Text(",", font_size=36, color=WHITE)
-        comma1.shift(LEFT * 0.8)
-        
-        text2 = Text("B", font_size=36, color=YELLOW)
-        
-        comma2 = Text(",", font_size=36, color=WHITE)
-        comma2.shift(RIGHT * 0.8)
-        
-        text3 = Text("C", font_size=36, color=YELLOW)
-        text3.shift(RIGHT * 1.5)
-        
-        # Create indices
-        index1 = Text("0", font_size=24, color=GRAY)
-        index1.next_to(text1, DOWN, buff=0.8)
-        
-        index2 = Text("1", font_size=24, color=GRAY)
-        index2.next_to(text2, DOWN, buff=0.8)
-        
-        index3 = Text("2", font_size=24, color=GRAY)
-        index3.next_to(text3, DOWN, buff=0.8)
-        
-        # Animate
-        self.play(Write(title))
-        self.wait(0.5)
-        self.play(Write(left_paren), Write(right_paren))
-        self.wait(0.3)
-        self.play(Write(text1), Write(comma1))
-        self.wait(0.3)
-        self.play(Write(text2), Write(comma2))
-        self.wait(0.3)
-        self.play(Write(text3))
-        self.wait(0.5)
-        self.play(Write(index1), Write(index2), Write(index3))
-        self.wait(1)
-        
-        # Show immutable text
-        immutable = Text("Immutable", font_size=32, color=RED)
-        immutable.to_edge(DOWN)
-        self.play(Write(immutable))
-        self.wait(2)`;
-  }
-
-  // Default fallback
-  return `from manim import *
-
-class TopicScene(Scene):
-    def construct(self):
-        # Create title
-        title = Text("${topic}", font_size=48)
-        title.set_color(BLUE)
-        
-        # Create a simple animation
-        square = Square(2, color=GREEN)
-        circle = Circle(1, color=RED)
-        
-        # Position elements
-        title.to_edge(UP)
-        square.to_edge(LEFT)
-        circle.to_edge(RIGHT)
-        
-        # Animate
-        self.play(Write(title))
-        self.wait(0.5)
-        self.play(Create(square), Create(circle))
-        self.wait(1)
-        
-        # Transform square to circle
-        self.play(Transform(square, circle.copy().to_edge(LEFT)))
-        self.wait(2)`;
-}
+import { generateObject } from "ai";
+import { google } from "@ai-sdk/google";
 
 // Schema for structured Manim code generation
 const manimCodeSchema = z.object({
@@ -294,17 +50,7 @@ export async function generateStructuredManimCode(
 
     console.log(`🔄 Storage MISS - Generating new Manim code for: ${topic}`);
 
-    // Use fallback immediately instead of trying Gemini API (quota exceeded)
-    console.log("🚨 Using fallback Manim code (Gemini quota exceeded)...");
-    const fallbackCode = getFallbackManimCode(topic);
-
-    // Store the fallback for future use
-    await blobStorage.storeManimCode(topic, fallbackCode, fallbackCode);
-    console.log(`💾 Stored fallback Manim code for future use: ${topic}`);
-
-    return fallbackCode;
-
-    /* Commented out Gemini API call due to quota
+    // Generate AI-powered Manim code
     const { object } = await generateObject({
       model: google('gemini-1.5-flash'),
       schema: manimCodeSchema,
@@ -361,22 +107,14 @@ Generate complete, runnable Manim code with proper Python syntax but WITHOUT exe
     console.log(`💾 Stored Manim code for future use: ${topic}`);
 
     return validatedCode;
-    */
   } catch (error) {
     console.error("Error generating structured Manim code:", error);
-    console.log("🚨 Gemini API failed for Manim code, using fallback...");
-
-    // Return fallback Manim code and store it
-    const fallbackCode = getFallbackManimCode(topic);
-    await blobStorage.storeManimCode(topic, fallbackCode, fallbackCode);
-    console.log(`💾 Stored fallback Manim code for future use: ${topic}`);
-
-    return fallbackCode;
+    throw new Error(`Failed to generate Manim code for topic: ${topic}. Original error: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
 /**
- * Fallback function that validates and fixes common issues in AI-generated Manim code
+ * Function that validates and fixes common issues in AI-generated Manim code
  */
 export function validateAndFixManimCode(code: string): string {
   let fixedCode = code;

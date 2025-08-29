@@ -3,17 +3,18 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "motion/react";
 
+const topics = [
+  "quantum physics",
+  "machine learning",
+  "calculus",
+  "neural networks",
+  "thermodynamics",
+  "organic chemistry",
+  "linear algebra",
+  "electromagnetism",
+];
+
 const TypewriterText: React.FC = () => {
-  const topics = [
-    "quantum physics",
-    "machine learning",
-    "calculus",
-    "neural networks",
-    "thermodynamics",
-    "organic chemistry",
-    "linear algebra",
-    "electromagnetism",
-  ];
 
   const [currentText, setCurrentText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -43,7 +44,7 @@ const TypewriterText: React.FC = () => {
     }, typeSpeed);
 
     return () => clearTimeout(timeout);
-  }, [currentText, currentIndex, isDeleting, topics]);
+  }, [currentText, currentIndex, isDeleting]);
 
   return (
     <motion.span
