@@ -47,7 +47,7 @@ export default function Footer() {
             </a>
             <span className="text-gray-400 text-lg">•</span>
             <a
-              href="#sam"
+              href="https://ankit-two.vercel.app/"
               className="hover:text-pink-500 transition-colors text-gray-700"
               style={{ fontSize: "1rem" }}
               target="_blank"

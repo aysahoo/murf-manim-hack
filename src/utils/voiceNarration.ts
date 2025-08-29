@@ -1,228 +1,23 @@
 import axios from "axios";
 import { blobStorage } from "./blobStorage";
 
-// Fallback voice scripts when Gemini API is down
-function getFallbackVoiceScript(topic: string) {
-  const topicLower = topic.toLowerCase();
+import { generateObject } from "ai";
+import { google } from "@ai-sdk/google";
+import { z } from "zod";
 
-  if (
-    topicLower.includes("math") ||
-    topicLower.includes("addition") ||
-    topicLower.includes("equation")
-  ) {
-    return {
-      script:
-        "Here we see the equation two plus three equals five. Watch as the equation appears on screen. Now we break it into individual parts - two, plus, three, equals, five. The number five lights up in yellow to show it's our final answer. This demonstrates basic addition in action.",
-      segments: [
-        {
-          text: "Here we see the equation two plus three equals five.",
-          duration: 3,
-          timestamp: 0,
-        },
-        {
-          text: "Watch as the equation appears on screen.",
-          duration: 2,
-          timestamp: 3,
-        },
-        {
-          text: "Now we break it into individual parts - two, plus, three, equals, five.",
-          duration: 4,
-          timestamp: 5,
-        },
-        {
-          text: "The number five lights up in yellow to show it's our final answer.",
-          duration: 4,
-          timestamp: 9,
-        },
-        {
-          text: "This demonstrates basic addition in action.",
-          duration: 3,
-          timestamp: 13,
-        },
-      ],
-      voiceStyle: "educational",
-      speakingRate: 1.0,
-    };
-  }
-
-  if (topicLower.includes("circle") || topicLower.includes("geometry")) {
-    return {
-      script:
-        "Here's a perfect circle drawn in blue. Watch the title appear at the top. Now we see the circle form on screen. A red line appears - this is the radius, extending from center to edge. The letter R labels our radius. This shows how circles are defined by their radius.",
-      segments: [
-        {
-          text: "Here's a perfect circle drawn in blue.",
-          duration: 3,
-          timestamp: 0,
-        },
-        {
-          text: "Watch the title appear at the top.",
-          duration: 2,
-          timestamp: 3,
-        },
-        {
-          text: "Now we see the circle form on screen.",
-          duration: 3,
-          timestamp: 5,
-        },
-        {
-          text: "A red line appears - this is the radius, extending from center to edge.",
-          duration: 4,
-          timestamp: 8,
-        },
-        {
-          text: "The letter R labels our radius. This shows how circles are defined by their radius.",
-          duration: 4,
-          timestamp: 12,
-        },
-      ],
-      voiceStyle: "educational",
-      speakingRate: 1.0,
-    };
-  }
-
-  if (topicLower.includes("gravity") || topicLower.includes("physics")) {
-    return {
-      script:
-        "Here we see gravity in action. The green circle represents Earth below. The small red circle is an apple above. Watch as the yellow arrow appears, showing gravitational force. The equation F equals mg appears, showing the force formula. Now the apple falls toward Earth, demonstrating gravity pulling objects downward.",
-      segments: [
-        { text: "Here we see gravity in action.", duration: 2, timestamp: 0 },
-        {
-          text: "The green circle represents Earth below. The small red circle is an apple above.",
-          duration: 4,
-          timestamp: 2,
-        },
-        {
-          text: "Watch as the yellow arrow appears, showing gravitational force.",
-          duration: 3,
-          timestamp: 6,
-        },
-        {
-          text: "The equation F equals mg appears, showing the force formula.",
-          duration: 3,
-          timestamp: 9,
-        },
-        {
-          text: "Now the apple falls toward Earth, demonstrating gravity pulling objects downward.",
-          duration: 4,
-          timestamp: 12,
-        },
-      ],
-      voiceStyle: "educational",
-      speakingRate: 1.0,
-    };
-  }
-
-  if (
-    topicLower.includes("list") ||
-    topicLower.includes("array") ||
-    topicLower.includes("data")
-  ) {
-    return {
-      script:
-        "Here's how lists work in programming. We see three boxes containing A, B, and C. Below each box are numbers - zero, one, two. These are the index positions. Watch as each box lights up yellow one by one. This shows how we can access each element by its position in the list.",
-      segments: [
-        {
-          text: "Here's how lists work in programming.",
-          duration: 3,
-          timestamp: 0,
-        },
-        {
-          text: "We see three boxes containing A, B, and C.",
-          duration: 3,
-          timestamp: 3,
-        },
-        {
-          text: "Below each box are numbers - zero, one, two. These are the index positions.",
-          duration: 4,
-          timestamp: 6,
-        },
-        {
-          text: "Watch as each box lights up yellow one by one.",
-          duration: 3,
-          timestamp: 10,
-        },
-        {
-          text: "This shows how we can access each element by its position in the list.",
-          duration: 4,
-          timestamp: 13,
-        },
-      ],
-      voiceStyle: "educational",
-      speakingRate: 1.0,
-    };
-  }
-
-  if (topicLower.includes("tuple") || topicLower.includes("pair")) {
-    return {
-      script:
-        "Here we see a tuple data structure. Tuples are like lists but immutable - they can't be changed. This tuple contains three elements: A, B, and C. The parentheses show it's a tuple, not a list. Each element has a position, starting from zero. Tuples are perfect for storing related data together.",
-      segments: [
-        {
-          text: "Here we see a tuple data structure.",
-          duration: 3,
-          timestamp: 0,
-        },
-        {
-          text: "Tuples are like lists but immutable - they can't be changed.",
-          duration: 4,
-          timestamp: 3,
-        },
-        {
-          text: "This tuple contains three elements: A, B, and C.",
-          duration: 3,
-          timestamp: 7,
-        },
-        {
-          text: "The parentheses show it's a tuple, not a list.",
-          duration: 3,
-          timestamp: 10,
-        },
-        {
-          text: "Each element has a position, starting from zero. Tuples are perfect for storing related data together.",
-          duration: 5,
-          timestamp: 13,
-        },
-      ],
-      voiceStyle: "educational",
-      speakingRate: 1.0,
-    };
-  }
-
-  // Default fallback for any topic
-  return {
-    script: `Let's explore the fascinating topic of ${topic} through visual animation. This concept plays an important role in understanding the world around us. Watch as we break down the key ideas step by step. The visual representation makes complex concepts easier to grasp. Understanding ${topic} opens up new ways of thinking about related subjects.`,
-    segments: [
-      {
-        text: `Let's explore the fascinating topic of ${topic} through visual animation.`,
-        duration: 4,
-        timestamp: 0,
-      },
-      {
-        text: "This concept plays an important role in understanding the world around us.",
-        duration: 5,
-        timestamp: 4,
-      },
-      {
-        text: "Watch as we break down the key ideas step by step.",
-        duration: 4,
-        timestamp: 9,
-      },
-      {
-        text: "The visual representation makes complex concepts easier to grasp.",
-        duration: 5,
-        timestamp: 13,
-      },
-      {
-        text: `Understanding ${topic} opens up new ways of thinking about related subjects.`,
-        duration: 5,
-        timestamp: 18,
-      },
-    ],
-    voiceStyle: "educational",
-    speakingRate: 1.0,
-  };
-}
+// Schema for narration script generation
+const narrationScriptSchema = z.object({
+  script: z.string().describe("Complete narration script"),
+  segments: z.array(
+    z.object({
+      text: z.string().describe("Text segment for this part"),
+      duration: z.number().describe("Duration in seconds"),
+      timestamp: z.number().describe("Start timestamp in seconds")
+    })
+  ).describe("Array of script segments with timing"),
+  voiceStyle: z.string().describe("Voice style (educational, professional, etc.)"),
+  speakingRate: z.number().describe("Speaking rate multiplier (0.5-2.0)")
+});
 
 /**
  * Configuration for Murf AI API
@@ -236,7 +31,7 @@ const MURF_API_CONFIG = {
 };
 
 /**
- * Generates a narration script using fallback templates based on the topic
+  * Generates a narration script based on the topic
  */
 export async function generateNarrationScript(topic: string): Promise<{
   script: string;
@@ -256,24 +51,12 @@ export async function generateNarrationScript(topic: string): Promise<{
 
     console.log(`🔄 Storage MISS - Generating new voice script for: ${topic}`);
 
-    // Use fallback immediately instead of trying Gemini API (quota exceeded)
-    console.log("🚨 Using fallback voice script (Gemini quota exceeded)...");
-    const fallbackScript = getFallbackVoiceScript(topic);
-
-    // Store the fallback for future use
-    await blobStorage.storeVoiceScript(topic, fallbackScript);
-    console.log(`💾 Stored fallback voice script for future use: ${topic}`);
-
-    return fallbackScript;
-
-    /* Commented out Gemini API call due to quota
+  // Generate AI-powered voice narration script
+    
     const { object } = await generateObject({
       model: google('gemini-1.5-flash'),
       schema: narrationScriptSchema,
       prompt: `Generate a BASIC OVERVIEW voice narration for a Manim animation about: "${topic}"
-
-Based on this Manim code:
-${manimCode}
 
 REQUIREMENTS:
 1. **Basic Overview**: Simple explanation of what the topic is
@@ -288,6 +71,8 @@ The script should be:
 - Each segment 5-7 seconds duration
 - Focus on "what it is", "how it works", and "why it matters"
 - Include simple examples or applications
+- Use educational voice style
+- Set speaking rate to 1.0
 
 Keep it simple, clear, and engaging for general audience.`
     });
@@ -297,19 +82,9 @@ Keep it simple, clear, and engaging for general audience.`
     console.log(`💾 Stored voice script for future use: ${topic}`);
 
     return object;
-    */
   } catch (error) {
     console.error("Error generating narration script:", error);
-    console.log("🚨 Gemini API failed for voice script, using fallback...");
-
-    // Fallback: Generate script based on topic without AI
-    const fallbackScript = getFallbackVoiceScript(topic);
-
-    // Store the fallback
-    await blobStorage.storeVoiceScript(topic, fallbackScript);
-    console.log(`💾 Stored fallback voice script for future use: ${topic}`);
-
-    return fallbackScript;
+    throw new Error(`Failed to generate narration script for topic: ${topic}. Original error: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -337,11 +112,8 @@ export async function textToSpeech(
       !MURF_API_CONFIG.apiKey ||
       MURF_API_CONFIG.apiKey === "your_murf_api_key_here"
     ) {
-      console.warn("Murf API key not configured, skipping voice generation");
-      return {
-        audioData: Buffer.from(""), // Return empty buffer to indicate fallback should be used
-        audioUrl: undefined,
-      };
+      console.warn("Murf API key not configured, cannot generate voice");
+      throw new Error("Murf API key not configured");
     }
 
     const response = await axios.post(
@@ -462,7 +234,7 @@ export async function generateVoiceNarration(
 
     // Check if API key is configured (audioData will be empty if not)
     if (audioResult.audioData.length === 0) {
-      console.log("Murf API key not configured, using fallback voice data");
+      console.log("Murf API key not configured, using script data only");
       return {
         audioUrl: null, // Indicate no audio URL available
         script: narrationData.script,

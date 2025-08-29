@@ -199,7 +199,17 @@ export async function executeCodeAndListFiles(code: string) {
     console.log(`Running command: ${command}`);
     // Run the Manim command to generate animations
     const result = await sbx.commands.run(command);
-    console.log(`Manim command executed`);
+    console.log(`Manim command executed with exit code: ${result.exitCode}`);
+
+    // Log execution details for debugging
+    if (result.exitCode !== 0) {
+      console.error(`❌ Manim execution failed for ${sceneClassName}`);
+      console.error(`STDERR: ${result.stderr}`);
+      console.error(`STDOUT: ${result.stdout}`);
+    } else {
+      console.log(`✅ Manim execution successful for ${sceneClassName}`);
+      console.log(`STDOUT: ${result.stdout}`);
+    }
 
     // List files after execution
     let files: Array<{
@@ -267,10 +277,15 @@ export async function executeCodeAndListFiles(code: string) {
 
         if (videoDirectories.length > 0) {
           const recentVideoDir = videoDirectories[0];
+          console.log(`Found video directory: ${recentVideoDir.name}`);
           const qualityDirs = normalize(
             (await sbx.files.list(
               `${videosPath}/${recentVideoDir.name}`
             )) as unknown as Array<Record<string, unknown>>
+          );
+          console.log(
+            `Found ${qualityDirs.length} quality directories:`,
+            qualityDirs.map((d) => d.name)
           );
 
           // Quality directories usually named like "480p15"
@@ -288,6 +303,10 @@ export async function executeCodeAndListFiles(code: string) {
                   file.type === "file" &&
                   file.name.endsWith(".mp4") &&
                   !file.name.includes("partial_movie_files")
+              );
+              console.log(
+                `Found ${mp4Files.length} MP4 files in ${qualityDir.name}:`,
+                mp4Files.map((f) => f.name)
               );
 
               // Download each video file and upload to blob storage
@@ -329,6 +348,42 @@ export async function executeCodeAndListFiles(code: string) {
                         `Error uploading video file to blob storage: ${videoFilePath}`,
                         blobError
                       );
+                      // Fallback: Save locally for development if blob storage fails
+                      if (process.env.NODE_ENV === "development") {
+                        console.log(
+                          "Falling back to local storage for development..."
+                        );
+                        const fs = await import("fs");
+                        const path = await import("path");
+
+                        try {
+                          const publicDir = path.join(
+                            process.cwd(),
+                            "public",
+                            "videos"
+                          );
+                          await fs.promises.mkdir(publicDir, {
+                            recursive: true,
+                          });
+
+                          const localPath = path.join(
+                            publicDir,
+                            videoFile.name
+                          );
+                          await fs.promises.writeFile(localPath, fileContent);
+
+                          console.log(`Saved video locally: ${localPath}`);
+                          extractedVideos.push({
+                            path: `/videos/${videoFile.name}`, // Local URL for development
+                            size: fileContent.length,
+                          });
+                        } catch (localError) {
+                          console.error(
+                            "Failed to save video locally:",
+                            localError
+                          );
+                        }
+                      }
                     }
                   } else {
                     console.error(
@@ -345,6 +400,38 @@ export async function executeCodeAndListFiles(code: string) {
               }
             }
           }
+        } else {
+          console.warn("No video directories found in media folder");
+          // List all files in media directory to see what's there
+          try {
+            const allMediaFiles = normalize(
+              (await sbx.files.list("/code/media")) as unknown as Array<
+                Record<string, unknown>
+              >
+            );
+            console.log(
+              "All files in media directory:",
+              allMediaFiles.map((f) => `${f.name} (${f.type})`)
+            );
+          } catch (listError) {
+            console.error("Could not list media directory:", listError);
+          }
+        }
+      } else {
+        console.warn("No media directory found");
+        // List all files in /code to see what's there
+        try {
+          const allFiles = normalize(
+            (await sbx.files.list("/code")) as unknown as Array<
+              Record<string, unknown>
+            >
+          );
+          console.log(
+            "All files in /code directory:",
+            allFiles.map((f) => `${f.name} (${f.type})`)
+          );
+        } catch (listError) {
+          console.error("Could not list /code directory:", listError);
         }
       }
     } catch (fileError) {
