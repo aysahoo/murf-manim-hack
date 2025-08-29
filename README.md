@@ -1,54 +1,6 @@
 # Murf Manim Hack
 
-## ⚙️ Environment Setup
-
-### Required API Keys
-
-Create a `.env.local` file in your project root with the following:
-
-```env
-# Google AI (Required)
-GOOGLE_GENERATIVE_AI_API_KEY=your_google_ai_api_key_here
-
-# E2B Sandbox (Required)
-E2B_API_KEY=your_e2b_api_key_here
-
-# Vercel Blob Storage (Required for deployment)
-BLOB_READ_WRITE_TOKEN=your_vercel_blob_token_here
-
-# Murf AI (Optional - for voice generation)
-MURF_API_KEY=your_murf_api_key_here
-```
-
-### API Key Setup Instructions
-
-1. **Google AI API**:
-   - Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
-   - Create a new API key
-   - Copy the key to `GOOGLE_GENERATIVE_AI_API_KEY`
-
-2. **E2B Sandbox**:
-   - Sign up at [E2B.dev](https://e2b.dev)
-   - Create a new API key in your dashboard
-   - Copy the key to `E2B_API_KEY`
-
-3. **Vercel Blob Storage**:
-   - Deploy your project to Vercel
-   - Go to Storage → Create → Blob
-   - Copy the token to `BLOB_READ_WRITE_TOKEN`
-
-4. **Murf AI** (Optional):
-   - Sign up at [Murf.ai](https://murf.ai)
-   - Get your API key from the developer section
-   - Add to `MURF_API_KEY` (voice features work without this)
-
-### Development vs Production
-
-- **Development**: The app works without Murf AI - uses text-only narration
-- **Production**: All API keys recommended for full functionality
-- **Caching**: Vercel Blob Storage improves performance and reduces API costs
-
-## 🛠️ Getting Started Next.js application that generates educational mathematical animations using Manim in a sandboxed environment. This project combines AI-powered concept explanation with dynamic mathematical visualizations.
+A Next.js application that generates educational mathematical animations using Manim in a sandboxed environment. This project combines AI-powered concept explanation with dynamic mathematical visualizations.
 
 ## 🎯 Features
 
@@ -93,25 +45,9 @@ MURF_API_KEY=your_murf_api_key_here
 3. **Environment Setup**
    Create a `.env.local` file with your API keys:
    ```env
-   # Google AI (Gemini) API Configuration
-   # Get your API key from: https://makersuite.google.com/app/apikey
-   GOOGLE_GENERATIVE_AI_API_KEY=your_google_ai_api_key_here
-
-   # E2B Code Interpreter API Configuration
-   # Get your API key from: https://e2b.dev/docs
-   E2B_API_KEY=your_e2b_api_key_here
-
-   # E2B Template ID for Manim execution
-   E2B_TEMPLATE_ID=q6wznn8hq65ffgkd0tqh
-
-   # Murf AI API (optional for voice generation)
-   MURF_API_KEY=your_murf_api_key_here
-
-   # Vercel Blob Storage (for video/audio storage)
-   BLOB_READ_WRITE_TOKEN=your_vercel_blob_token_here
-   ```
-
-   **Note**: You can copy from `.env.example` and fill in your actual API keys.
+   E2B_API_KEY=your_e2b_api_key
+   OPENAI_API_KEY=your_openai_api_key
+   GOOGLE_AI_API_KEY=your_google_ai_api_key
    ```
 
 4. **Run the development server**
@@ -166,54 +102,12 @@ The template configuration is defined in:
 │   └── utils/                 # Utility functions
 │       ├── formatManimCode.ts
 │       ├── sandbox.ts         # E2B sandbox integration
-│       ├── structuredManimGenerator.ts  # AI-powered Manim code generation
-│       ├── voiceNarration.ts  # AI voice script generation
-│       └── lessonBreakdown.ts # AI lesson structuring
+│       └── structuredManimGenerator.ts
 ├── public/                    # Static assets
 ├── e2b.Dockerfile            # Custom E2B sandbox configuration
 ├── e2b.toml                  # E2B template settings
 └── test_manim.ipynb          # Manim testing notebook
 ```
-
-## 🤖 AI Integration
-
-This project uses multiple AI services to generate educational content:
-
-### Google Gemini (Primary AI)
-- **Purpose**: Generates Manim code, lesson breakdowns, and voice scripts
-- **Models**: `gemini-1.5-flash` for fast, structured generation
-- **Features**: 
-  - Code generation with proper Manim syntax
-  - Educational content structuring
-  - Voice narration script creation
-
-### Murf AI (Voice Generation)
-- **Purpose**: Converts text scripts to natural-sounding voice audio
-- **Features**: Professional educational voice styles
-- **Integration**: Optional - works with or without API key
-
-### AI-Powered Features
-
-1. **Structured Manim Generation** (`structuredManimGenerator.ts`)
-   - Generates production-ready Manim code
-   - Validates and fixes common syntax issues
-   - Follows Manim best practices
-
-2. **Lesson Breakdown** (`lessonBreakdown.ts`)
-   - Breaks complex topics into 3-4 mini-lessons
-   - Creates timed segments (15 seconds each)
-   - Generates synchronized animations and scripts
-
-3. **Voice Narration** (`voiceNarration.ts`)
-   - Creates educational voice scripts
-   - Segments content for better pacing
-   - Integrates with Murf AI for audio generation
-
-### Content Caching
-All AI-generated content is automatically cached using Vercel Blob Storage:
-- Prevents redundant API calls
-- Improves response times
-- Reduces API costs
 
 ## 🔧 API Endpoints
 
