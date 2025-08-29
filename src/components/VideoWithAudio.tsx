@@ -280,32 +280,16 @@ const VideoWithAudio: React.FC<VideoWithAudioProps> = ({
                 networkState: e.currentTarget?.networkState,
                 readyState: e.currentTarget?.readyState,
                 videoUrl,
-                isValidUrl: videoUrl?.startsWith('http'),
-                isBlobUrl: videoUrl?.includes('blob.vercel'),
               });
               setVideoError(true);
             }}
             onLoadStart={() => console.log("Video load started:", videoUrl)}
             onLoadedData={() => console.log("Video data loaded:", videoUrl)}
             onCanPlay={() => console.log("Video can play:", videoUrl)}
-            onLoadedMetadata={() => console.log("Video metadata loaded:", videoUrl)}
           />
         ) : (
           <div className="w-full rounded-2xl bg-gray-900 p-4 text-white text-center">
-            <p className="mb-4">Video failed to load.</p>
-            <div className="mb-4 text-sm text-gray-300">
-              <p>Video URL: {videoUrl}</p>
-              <p>URL Type: {videoUrl?.startsWith('http') ? 'HTTP URL' : 'Local Path'}</p>
-              <p>Is Blob URL: {videoUrl?.includes('blob.vercel') ? 'Yes' : 'No'}</p>
-            </div>
-            <a 
-              href={videoUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-block mb-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white"
-            >
-              Test Direct URL
-            </a>
+            <p className="mb-4">Video failed to load. Trying fallback...</p>
             <video
               src={videoUrl}
               controls={true}

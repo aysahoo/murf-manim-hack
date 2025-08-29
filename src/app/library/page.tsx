@@ -51,7 +51,7 @@ const examples: Example[] = [
     id: "dictionaries-part1",
     title: "Dictionaries - Part 1",
     category: "Data Structures",
-    videoUrl: "/videos/TopicScene.mp4",
+    videoUrl: "/videos/TopicScene.mp4", // Using general video as fallback
     audioUrl: "/audio/dictionaries_part_1_1756360603843.mp3",
     description: "Introduction to dictionary data structures",
   },
@@ -59,7 +59,7 @@ const examples: Example[] = [
     id: "dictionaries-part2",
     title: "Dictionaries - Part 2",
     category: "Data Structures",
-    videoUrl: "/videos/TopicScene.mp4",
+    videoUrl: "/videos/TopicScene.mp4", // Using general video as fallback
     audioUrl: "/audio/dictionaries_part_2_1756360648854.mp3",
     description: "Advanced dictionary operations and use cases",
   },
