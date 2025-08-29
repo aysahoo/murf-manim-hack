@@ -22,8 +22,8 @@ class StringTheoryScene(Scene):
         self.play(Create(string_line))
         self.wait(1)
 
-        # Step 4: Label the string with a MathTex object.
-        string_label = MathTex(r"\text{Vibrating String}")
+        # Step 4: Label the string with a Text object.
+        string_label = Text("Vibrating String")
         string_label.next_to(string_line, UP, buff=0.2)
         self.play(Write(string_label))
         self.wait(1)
@@ -37,7 +37,7 @@ class StringTheoryScene(Scene):
         self.wait(1)
 
         # Step 6: Label the extra dimensions.
-        extra_label = MathTex(r"\text{Extra Dimensions}")
+        extra_label = Text("Extra Dimensions")
         extra_label.next_to(extra_dimensions, DOWN, buff=0.1)
         self.play(Write(extra_label))
         self.wait(1)

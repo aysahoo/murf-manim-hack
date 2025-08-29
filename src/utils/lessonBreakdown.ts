@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { blobStorage } from "./blobStorage";
 import { generateObject } from "ai";
-import { google } from "@ai-sdk/google";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+
+// Initialize the OpenRouter provider
+const openrouter = createOpenRouter({
+  apiKey: process.env.OPENROUTER_API_KEY || '',
+});
 
 // Schema for lesson breakdown
 const lessonBreakdownSchema = z.object({
@@ -51,7 +56,7 @@ export async function generateLessonBreakdown(topic: string): Promise<{
       `🔄 Storage MISS - Generating new lesson breakdown for: ${topic}`
     );
     const { object } = await generateObject({
-      model: google("gemini-1.5-flash"),
+      model: openrouter("google/gemini-flash-1.5"),
       schema: lessonBreakdownSchema,
       prompt: `Break down the topic "${topic}" into 3-4 sequential mini-lessons for educational animation.
 
@@ -74,6 +79,7 @@ MANIM CODE RULES:
 - Keep animations lightweight and fast
 - Focus on visual clarity over complexity
 - Use only basic Manim objects: Text, MathTex, Circle, Square, Line, Arrow
+- Use Text() for plain text labels, never use MathTex with \\text{}
 - Always use MathTex for mathematical expressions, never use Tex
 - Position objects with next_to() method
 - Use simple animations: Write, FadeIn, FadeOut, Transform

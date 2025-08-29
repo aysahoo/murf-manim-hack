@@ -2,8 +2,13 @@ import axios from "axios";
 import { blobStorage } from "./blobStorage";
 
 import { generateObject } from "ai";
-import { google } from "@ai-sdk/google";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { z } from "zod";
+
+// Initialize the OpenRouter provider
+const openrouter = createOpenRouter({
+  apiKey: process.env.OPENROUTER_API_KEY || '',
+});
 
 // Schema for narration script generation
 const narrationScriptSchema = z.object({
@@ -54,7 +59,7 @@ export async function generateNarrationScript(topic: string): Promise<{
   // Generate AI-powered voice narration script
     
     const { object } = await generateObject({
-      model: google('gemini-1.5-flash'),
+      model: openrouter("google/gemini-flash-1.5"),
       schema: narrationScriptSchema,
       prompt: `Generate a BASIC OVERVIEW voice narration for a Manim animation about: "${topic}"
 

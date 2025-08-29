@@ -14,7 +14,7 @@ A Next.js application that generates educational mathematical animations using M
 
 - **Frontend**: Next.js 15, React 19, TypeScript
 - **Styling**: Tailwind CSS 4, Paper Design Shaders
-- **AI**: Google AI SDK, OpenAI SDK
+- **AI**: OpenRouter (Gemini Flash 1.5), Murf AI for TTS
 - **Sandbox**: E2B Code Interpreter
 - **Animation**: Manim (Mathematical Animation Engine)
 - **Package Manager**: Bun
@@ -25,7 +25,7 @@ A Next.js application that generates educational mathematical animations using M
 
 - Node.js 18+ or Bun
 - E2B account and API key
-- OpenAI or Google AI API key
+- OpenRouter API key (for AI-powered code generation)
 
 ### Installation
 
@@ -46,8 +46,9 @@ A Next.js application that generates educational mathematical animations using M
    Create a `.env.local` file with your API keys:
    ```env
    E2B_API_KEY=your_e2b_api_key
-   OPENAI_API_KEY=your_openai_api_key
-   GOOGLE_AI_API_KEY=your_google_ai_api_key
+   OPENROUTER_API_KEY=your_openrouter_api_key
+   MURF_AI_API_KEY=your_murf_ai_api_key
+   BLOB_READ_WRITE_TOKEN=your_vercel_blob_token
    ```
 
 4. **Run the development server**
