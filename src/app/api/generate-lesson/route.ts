@@ -57,7 +57,7 @@ export async function PATCH(request: NextRequest) {
     );
 
     // Validate and fix the Manim code
-    let validatedCode = validateAndFixManimCode(targetLesson.manim_code);
+    const validatedCode = validateAndFixManimCode(targetLesson.manim_code);
     const multilineCode = convertEscapedNewlines(validatedCode);
 
     console.log(`Testing Manim code execution for Part ${part}...`);
