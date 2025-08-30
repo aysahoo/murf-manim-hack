@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateText } from 'ai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
-import { generateArticleAudio } from '@/utils/murfTTS';
+import { generateMurfTTS } from '@/utils/murfTTS';
 
 // Initialize the OpenRouter provider
 const openrouter = createOpenRouter({
@@ -26,7 +26,8 @@ interface GenerateArticleResponse {
   introduction: string;
   sections: ArticleSection[];
   conclusion: string;
-  wordCount: number;
+  paragraph: string;
+  characterCount: number;
   audioUrl?: string;
   audioLengthInSeconds?: number;
   audioGenerated: boolean;
@@ -38,9 +39,9 @@ const activeRequests = new Map<string, Promise<GenerateArticleResponse>>();
 
 export async function POST(request: NextRequest) {
   try {
-    const { 
-      topic, 
-      length = 'medium', 
+    const {
+      topic,
+      length = 'medium',
       style = 'educational',
       includeAudio = false,
       voiceId = 'en-US-natalie',
@@ -107,8 +108,8 @@ export async function POST(request: NextRequest) {
 }
 
 async function generateArticleContent(
-  topic: string, 
-  length: string, 
+  topic: string,
+  length: string,
   style: string,
   includeAudio: boolean = false,
   audioOptions: {
@@ -117,13 +118,9 @@ async function generateArticleContent(
     pitch?: number;
   } = {}
 ): Promise<GenerateArticleResponse> {
-  
-  // Define word count targets based on length
-  const wordCountTargets: Record<string, string> = {
-    short: '800-1200',
-    medium: '1500-2500', 
-    long: '3000-5000'
-  };
+
+  // Define character count target - always 2600 characters
+  const characterCountTarget = '2600';
 
   // Define style guidelines
   const styleGuidelines: Record<string, string> = {
@@ -136,7 +133,7 @@ async function generateArticleContent(
   const systemPrompt = `You are an expert writer tasked with creating a comprehensive article about "${topic}".
 
 REQUIREMENTS:
-- Length: ${wordCountTargets[length]} words
+- Length: EXACTLY ${characterCountTarget} characters (including spaces and punctuation)
 - Style: ${styleGuidelines[style]}
 - Structure: Introduction, 4-6 main sections, and conclusion
 - Format: Return ONLY a valid JSON object with the specified structure
@@ -148,6 +145,11 @@ The article should be informative, well-researched, and engaging. Cover the topi
 - Applications or examples
 - Current developments or future prospects
 - Practical implications
+
+CRITICAL CHARACTER COUNT REQUIREMENT:
+- The total character count of all content (title + introduction + all section titles + all section content + conclusion) must be EXACTLY ${characterCountTarget} characters
+- Count every character including spaces, punctuation, and line breaks
+- Adjust content length to meet this exact requirement
 
 IMPORTANT JSON FORMATTING RULES:
 1. Return ONLY the JSON object, no additional text or markdown
@@ -169,7 +171,7 @@ Return the response as a JSON object with this exact structure:
   "conclusion": "A strong conclusion that summarizes key points and provides final thoughts"
 }
 
-Make sure each section is substantial and the total content meets the word count requirement. Use clear, logical flow between sections.`;
+Make sure each section is substantial and the total content meets the EXACT character count requirement of ${characterCountTarget} characters. Use clear, logical flow between sections.`;
 
   try {
     // Generate the article content
@@ -206,8 +208,11 @@ Make sure each section is substantial and the total content meets the word count
       throw new Error('Generated article missing required fields');
     }
 
-    // Calculate word count
-    const wordCount = calculateWordCount(parsedArticle);
+    // Calculate character count
+    const characterCount = calculateCharacterCount(parsedArticle);
+
+    // Create merged paragraph content
+    const paragraph = createMergedParagraph(parsedArticle);
 
     const result: GenerateArticleResponse = {
       topic,
@@ -215,7 +220,8 @@ Make sure each section is substantial and the total content meets the word count
       introduction: parsedArticle.introduction,
       sections: parsedArticle.sections,
       conclusion: parsedArticle.conclusion,
-      wordCount,
+      paragraph,
+      characterCount,
       audioGenerated: false,
       success: true
     };
@@ -223,21 +229,16 @@ Make sure each section is substantial and the total content meets the word count
     // Generate audio if requested
     if (includeAudio) {
       try {
-        console.log('Generating audio for article...');
-        const audioResult = await generateArticleAudio(
-          {
-            title: parsedArticle.title,
-            introduction: parsedArticle.introduction,
-            sections: parsedArticle.sections,
-            conclusion: parsedArticle.conclusion
-          },
+        console.log('Generating audio for article paragraph...');
+        const audioResult = await generateParagraphAudio(
+          parsedArticle.title,
+          paragraph,
           {
             voiceId: audioOptions.voiceId,
             rate: audioOptions.rate,
             pitch: audioOptions.pitch,
             format: 'MP3',
-            includeTitle: true,
-            pauseBetweenSections: 2
+            includeTitle: true
           }
         );
 
@@ -264,10 +265,116 @@ Make sure each section is substantial and the total content meets the word count
   }
 }
 
+async function generateParagraphAudio(
+  title: string,
+  paragraph: string,
+  options: {
+    voiceId?: string;
+    rate?: number;
+    pitch?: number;
+    format?: 'MP3' | 'WAV';
+    includeTitle?: boolean;
+  } = {}
+): Promise<{
+  audioUrl: string;
+  audioLengthInSeconds: number;
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    const {
+      voiceId = 'en-US-natalie',
+      rate = 0,
+      pitch = 0,
+      includeTitle = true
+    } = options;
+
+    // Clean text for TTS
+    function cleanTextForTTS(text: string): string {
+      if (!text) return '';
+
+      return text
+        .replace(/[""]/g, '"')  // Replace smart quotes
+        .replace(/['']/g, "'")  // Replace smart apostrophes 
+        .replace(/…/g, '...')   // Replace ellipsis
+        .replace(/—/g, '-')     // Replace em dash
+        .replace(/–/g, '-')     // Replace en dash
+        .replace(/\s+/g, ' ')   // Remove excessive whitespace
+        .replace(/[\n\r\t]/g, ' ') // Remove newlines and tabs
+        .trim();
+    }
+
+    // Construct the full text for TTS
+    let fullText = '';
+
+    if (includeTitle) {
+      fullText += `${cleanTextForTTS(title)}. [pause 3s] `;
+    }
+
+    fullText += cleanTextForTTS(paragraph);
+
+    console.log('Full text length:', fullText.length, 'characters');
+
+    // Murf API has a 3000 character limit, so we need to split if necessary
+    const maxLength = 2800; // Leave some buffer
+
+    if (fullText.length <= maxLength) {
+      // Text is short enough, generate single audio
+      console.log('Text fits in single request, generating audio...');
+
+      const murfRequest = {
+        text: fullText,
+        voiceId,
+        ...(rate !== 0 && { rate }),
+        ...(pitch !== 0 && { pitch })
+      };
+
+      const audioResponse = await generateMurfTTS(murfRequest);
+
+      return {
+        audioUrl: audioResponse.audioFile,
+        audioLengthInSeconds: audioResponse.audioLengthInSeconds,
+        success: true
+      };
+    } else {
+      // Text is too long, truncate to fit within limits
+      console.log('Text is too long, truncating...');
+
+      const truncatedText = fullText.substring(0, maxLength - 100) + '... Thank you for listening.';
+
+      console.log('Truncated text length:', truncatedText.length, 'characters');
+
+      const murfRequest = {
+        text: truncatedText,
+        voiceId,
+        ...(rate !== 0 && { rate }),
+        ...(pitch !== 0 && { pitch })
+      };
+
+      const audioResponse = await generateMurfTTS(murfRequest);
+
+      return {
+        audioUrl: audioResponse.audioFile,
+        audioLengthInSeconds: audioResponse.audioLengthInSeconds,
+        success: true
+      };
+    }
+
+  } catch (error) {
+    console.error('Error generating paragraph audio:', error);
+    return {
+      audioUrl: '',
+      audioLengthInSeconds: 0,
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to generate audio'
+    };
+  }
+}
+
 function cleanJsonString(jsonString: string): string {
   // Remove markdown code blocks
   let cleaned = jsonString.replace(/```json\s*|\s*```/g, '').trim();
-  
+
   // Fix common JSON issues
   cleaned = cleaned
     // Remove any trailing commas before closing braces/brackets
@@ -275,7 +382,7 @@ function cleanJsonString(jsonString: string): string {
     // Fix escaped newlines and quotes in content
     .replace(/\\n/g, '\\n')
     .replace(/\\"/g, '\\"');
-  
+
   return cleaned;
 }
 
@@ -285,27 +392,27 @@ function extractArticleFromText(text: string): ParsedArticle {
   if (!jsonMatch) {
     throw new Error('No JSON object found in response');
   }
-  
+
   let jsonString = jsonMatch[0];
-  
+
   // Clean the JSON string
   jsonString = cleanJsonString(jsonString);
-  
+
   try {
     return JSON.parse(jsonString);
   } catch (error) {
     // If parsing still fails, try manual extraction
     console.log('JSON parsing failed, attempting manual extraction...');
     console.error('Parse error details:', error);
-    
+
     const titleMatch = text.match(/"title"\s*:\s*"([^"]*(?:\\.[^"]*)*)"/);
     const introMatch = text.match(/"introduction"\s*:\s*"([^"]*(?:\\.[^"]*)*)"/);
     const conclusionMatch = text.match(/"conclusion"\s*:\s*"([^"]*(?:\\.[^"]*)*)"/);
-    
+
     // Extract sections
     const sectionsMatch = text.match(/"sections"\s*:\s*\[([\s\S]*?)\]/);
     const sections = [];
-    
+
     if (sectionsMatch) {
       // Extract individual sections
       const sectionPattern = /\{\s*"title"\s*:\s*"([^"]*(?:\\.[^"]*)*)"\s*,\s*"content"\s*:\s*"([^"]*(?:\\.[^"]*)*)"\s*\}/g;
@@ -317,7 +424,7 @@ function extractArticleFromText(text: string): ParsedArticle {
         });
       }
     }
-    
+
     if (titleMatch && introMatch && conclusionMatch && sections.length > 0) {
       return {
         title: titleMatch[1].replace(/\\"/g, '"'),
@@ -331,32 +438,51 @@ function extractArticleFromText(text: string): ParsedArticle {
   }
 }
 
-function calculateWordCount(article: ParsedArticle): number {
-  let totalWords = 0;
-  
-  // Count words in title
-  totalWords += countWords(article.title);
-  
-  // Count words in introduction
-  totalWords += countWords(article.introduction);
-  
-  // Count words in all sections
+function createMergedParagraph(article: ParsedArticle): string {
+  let mergedContent = '';
+
+  // Add introduction
+  mergedContent += article.introduction;
+
+  // Add sections content with titles
   if (article.sections && Array.isArray(article.sections)) {
     article.sections.forEach((section: ArticleSection) => {
-      totalWords += countWords(section.title);
-      totalWords += countWords(section.content);
+      mergedContent += '\n\n' + section.title + '\n\n' + section.content;
     });
   }
-  
-  // Count words in conclusion
-  totalWords += countWords(article.conclusion);
-  
-  return totalWords;
+
+  // Add conclusion
+  mergedContent += '\n\n' + article.conclusion;
+
+  return mergedContent.trim();
 }
 
-function countWords(text: string): number {
+function calculateCharacterCount(article: ParsedArticle): number {
+  let totalCharacters = 0;
+
+  // Count characters in title
+  totalCharacters += countCharacters(article.title);
+
+  // Count characters in introduction
+  totalCharacters += countCharacters(article.introduction);
+
+  // Count characters in all sections
+  if (article.sections && Array.isArray(article.sections)) {
+    article.sections.forEach((section: ArticleSection) => {
+      totalCharacters += countCharacters(section.title);
+      totalCharacters += countCharacters(section.content);
+    });
+  }
+
+  // Count characters in conclusion
+  totalCharacters += countCharacters(article.conclusion);
+
+  return totalCharacters;
+}
+
+function countCharacters(text: string): number {
   if (!text) return 0;
-  return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+  return text.length;
 }
 
 // GET method to retrieve article (optional - for caching if needed)

@@ -193,8 +193,8 @@ export async function executeCodeAndListFiles(code: string) {
     // Use -qm (medium quality) instead of -pql (preview low quality) to get better videos
     // Removed -p flag to prevent preview popup and potential render issues
     const command = sceneClassName
-      ? `cd /code && manim -qm ${filename} ${sceneClassName}`
-      : `cd /code && manim -qm ${filename}`;
+      ? `cd /code && manim -pqm -v WARNING ${filename} ${sceneClassName}`
+      : `cd /code && manim -pqm -v WARNING ${filename}`;
 
     console.log(`Running command: ${command}`);
     // Run the Manim command to generate animations

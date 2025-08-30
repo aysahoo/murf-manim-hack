@@ -7,6 +7,8 @@ import SubmittedTopicTitle from "../../../components/SubmittedTopicTitle";
 import Navbar from "../../../components/Navbar";
 import VideoWithAudio from "../../../components/VideoWithAudio";
 import LessonBreakdown from "../../../components/LessonBreakdown";
+import EnhancedLessonBreakdown from "../../../components/EnhancedLessonBreakdown";
+import ArticleDisplay from "../../../components/ArticleDisplay";
 import Footer from "../../../components/Footer";
 
 interface Lesson {
@@ -19,14 +21,37 @@ interface Lesson {
   executionSuccess?: boolean;
 }
 
+interface ArticleSection {
+  title: string;
+  content: string;
+}
+
+interface Article {
+  title: string;
+  introduction: string;
+  sections: ArticleSection[];
+  conclusion: string;
+  audioUrl?: string;
+}
+
+interface LessonArticle extends Article {
+  part: number;
+}
+
 const TopicPageContent = () => {
   const params = useParams<{ topic: string }>();
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") || "single";
 
+  // Auto-generate articles after videos load
+  const [showArticles, setShowArticles] = useState<boolean>(false);
+
   // Single video mode state
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
+  // Single article mode state
+  const [article, setArticle] = useState<Article | null>(null);
 
   // Lesson mode state
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -34,6 +59,7 @@ const TopicPageContent = () => {
   // Common state
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [articleLoading, setArticleLoading] = useState<boolean>(false);
 
   const topic = Array.isArray(params.topic)
     ? decodeURIComponent(params.topic[0])
@@ -200,6 +226,52 @@ const TopicPageContent = () => {
     }
   }, [topic, mode]);
 
+  // Auto-generate articles for single mode after video is loaded
+  useEffect(() => {
+    if (!loading && !articleLoading && !article && mode === "single" && videoUrl) {
+      // Auto-generate article after a short delay
+      const timer = setTimeout(() => {
+        generateArticle();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, mode, videoUrl, article, articleLoading]);
+
+  const generateArticle = async () => {
+    setArticleLoading(true);
+    try {
+      const res = await fetch("/api/generate-article", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          topic, 
+          length: "medium",
+          style: "educational",
+          includeAudio: true,
+          voiceId: "en-US-natalie"
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setArticle({
+          title: data.title,
+          introduction: data.introduction,
+          sections: data.sections,
+          conclusion: data.conclusion,
+          audioUrl: data.audioUrl,
+        });
+      } else {
+        throw new Error("Failed to generate article");
+      }
+    } catch (error) {
+      console.error("Error generating article:", error);
+      setError("Failed to generate article");
+    } finally {
+      setArticleLoading(false);
+    }
+  };
+
   const regenerateVideo = async () => {
     window.location.reload(); // Simple refresh to regenerate
   };
@@ -207,13 +279,15 @@ const TopicPageContent = () => {
   return (
     <ShaderBackground>
       <div className="relative z-10 min-h-screen flex flex-col">
-        <Navbar showBackButton={true} />
+        <Navbar showBackButton={true} hideCreateButtons={true} />
         <main className="flex-1 flex flex-col w-full">
           <SubmittedTopicTitle
             topic={topic}
             mode={mode as "single" | "lessons"}
           />
-          <div className="mt-10 flex justify-center px-6">
+
+
+          <div className="mt-6 flex justify-center px-6">
             <div className="max-w-5xl w-full">
               {loading && (
                 <div className="text-center text-gray-700">
@@ -241,25 +315,96 @@ const TopicPageContent = () => {
                 </div>
               )}
 
-              {/* Lesson Mode */}
-              {mode === "lessons" && lessons.length > 0 && !loading && (
-                <LessonBreakdown
-                  lessons={lessons}
-                  topic={topic}
-                  className="w-full"
-                />
+              {/* Video Content */}
+              {!loading && (
+                <>
+                  {/* Lesson Video Mode with Integrated Articles */}
+                  {mode === "lessons" && lessons.length > 0 && (
+                    <EnhancedLessonBreakdown
+                      lessons={lessons}
+                      topic={topic}
+                      className="w-full"
+                    />
+                  )}
+
+                  {/* Single Video Mode */}
+                  {mode === "single" && videoUrl && (
+                    <div className="max-w-3xl mx-auto">
+                      <VideoWithAudio
+                        videoUrl={videoUrl}
+                        audioUrl={audioUrl || undefined}
+                        className="w-full rounded-2xl"
+                        autoPlay={false}
+                        onEnded={() => {}}
+                      />
+                    </div>
+                  )}
+                </>
               )}
 
-              {/* Single Video Mode */}
-              {mode === "single" && videoUrl && !loading && (
-                <div className="max-w-3xl mx-auto">
-                  <VideoWithAudio
-                    videoUrl={videoUrl}
-                    audioUrl={audioUrl || undefined}
-                    className="w-full rounded-2xl"
-                    autoPlay={false}
-                    onEnded={() => {}}
-                  />
+              {/* Article Section - Only for single mode (lessons have integrated articles) */}
+              {!loading && mode === "single" && (
+                <div className="mt-16">
+                  {/* Section Header */}
+                  <div className="text-center mb-8">
+                    <h2 className="text-2xl md:text-3xl font-serif font-medium text-black mb-2">
+                      Written Explanation
+                    </h2>
+                    <p className="text-gray-600">
+                      Comprehensive article with voice narration
+                    </p>
+                    <div className="w-16 h-0.5 bg-pink-500 mx-auto mt-4"></div>
+                  </div>
+
+                  {/* Article Loading State */}
+                  {articleLoading && (
+                    <div className="text-center text-gray-700 mb-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-pink-500 mx-auto"></div>
+                      <p className="mt-2 text-sm">Generating article...</p>
+                    </div>
+                  )}
+
+                  {/* Single Article */}
+                  {article && (
+                    <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
+                      <ArticleDisplay
+                        title={article.title}
+                        introduction={article.introduction}
+                        sections={article.sections}
+                        conclusion={article.conclusion}
+                        audioUrl={article.audioUrl}
+                        className="max-w-none"
+                      />
+                    </div>
+                  )}
+
+                  {/* Generate Article Button */}
+                  {!article && !articleLoading && (
+                    <div className="text-center">
+                      <button
+                        onClick={generateArticle}
+                        className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-full transition-colors flex items-center gap-2 mx-auto"
+                      >
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <polyline points="14,2 14,8 20,8" />
+                          <line x1="16" y1="13" x2="8" y2="13" />
+                          <line x1="16" y1="17" x2="8" y2="17" />
+                          <polyline points="10,9 9,9 8,9" />
+                        </svg>
+                        Generate Article
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

@@ -4,11 +4,13 @@ import { useRouter } from "next/navigation";
 interface NavbarProps {
   showBackButton?: boolean;
   backPath?: string;
+  hideCreateButtons?: boolean;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
   showBackButton = false,
   backPath = "/explain",
+  hideCreateButtons = false,
 }) => {
   const router = useRouter();
 
@@ -60,29 +62,75 @@ const Navbar: React.FC<NavbarProps> = ({
             </h1>
           </div>
 
-          <a
-            href="/library"
-            className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center transition-colors hover:bg-gray-800 cursor-pointer shadow-lg"
-            title="View Library"
-            aria-label="Go to library"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          <div className="flex items-center gap-3">
+            {!hideCreateButtons && (
+              <>
+                <a
+                  href="/explain"
+                  className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center transition-colors hover:bg-gray-800 cursor-pointer shadow-lg"
+                  title="Create Video"
+                  aria-label="Create video explanation"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </a>
+                <a
+                  href="/article"
+                  className="w-8 h-8 bg-white/60 backdrop-blur-sm text-gray-700 rounded-full flex items-center justify-center transition-colors hover:bg-white/80 cursor-pointer shadow-lg border border-white/50"
+                  title="Create Article"
+                  aria-label="Create article explanation"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14,2 14,8 20,8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10,9 9,9 8,9" />
+                  </svg>
+                </a>
+              </>
+            )}
+            <a
+              href="/library"
+              className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center transition-colors hover:bg-gray-800 cursor-pointer shadow-lg"
+              title="View Library"
+              aria-label="Go to library"
             >
-              <rect x="3" y="3" width="7" height="7" />
-              <rect x="14" y="3" width="7" height="7" />
-              <rect x="14" y="14" width="7" height="7" />
-              <rect x="3" y="14" width="7" height="7" />
-            </svg>
-          </a>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
+            </a>
+          </div>
         </div>
       </div>
     </nav>
