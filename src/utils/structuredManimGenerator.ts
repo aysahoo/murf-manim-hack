@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { blobStorage } from "./blobStorage";
 import { generateObject } from "ai";
-import { google } from "@ai-sdk/google";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+
+// Initialize the OpenRouter provider
+const openrouter = createOpenRouter({
+  apiKey: process.env.OPENROUTER_API_KEY || '',
+});
 
 
 // Schema for structured Manim code generation
@@ -54,7 +59,7 @@ export async function generateStructuredManimCode(
 // Generate AI-powered Manim code
 
     const { object } = await generateObject({
-      model: google('gemini-1.5-flash'),
+      model: openrouter("deepseek/deepseek-chat-v3.1"),
       schema: manimCodeSchema,
       prompt: `Generate production-ready Manim Python code for the topic: "${topic}".
 
@@ -64,6 +69,7 @@ Requirements:
 - Create a Scene class that inherits from Scene
 - Include a construct method with complete animation logic
 - Use MathTex for mathematical expressions, never use Tex for math
+- Use Text() for plain text labels, never use MathTex with \\text{} 
 - Follow proper Manim syntax:
   - Never use .label() method (it doesn't exist in Manim)
   - Use next_to() instead of .label() for positioning text
@@ -81,10 +87,11 @@ Requirements:
 - IMPORTANT: Just define the Scene class, do not instantiate or run it
 
 Example proper Manim patterns:
-- Creating text with math: text = MathTex(r"e^{i\pi} + 1 = 0")
+- Creating mathematical expressions: equation = MathTex(r"e^{i\pi} + 1 = 0")
+- Creating plain text labels: label = Text("Vibrating String")
 - Labeling a line: 
   line = Line(start=LEFT, end=RIGHT)
-  label = MathTex("x").next_to(line, UP, buff=0.1)
+  label = Text("x-axis").next_to(line, UP, buff=0.1)
 - Creating and positioning objects:
   square = Square(2)  # side_length as positional parameter
   circle = Circle(radius=1.5)
@@ -183,7 +190,11 @@ export function validateAndFixManimCode(code: string): string {
     )
 
     // Ensure r prefix for complex math expressions
-    .replace(/MathTex\("(.*?[\\^_\{\}].*?)"\)/g, 'MathTex(r"$1")');
+    .replace(/MathTex\("(.*?[\\^_\{\}].*?)"\)/g, 'MathTex(r"$1")')
+
+    // Fix \text{} usage - convert to Text() objects for plain text
+    .replace(/MathTex\(r?"\\text\{([^}]+)\}"\)/g, 'Text("$1")')
+    .replace(/MathTex\("\\text\{([^}]+)\}"\)/g, 'Text("$1")');
 
   // Validate structure
   if (!/class \w+\(Scene\):/.test(fixedCode)) {
