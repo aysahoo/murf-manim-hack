@@ -183,6 +183,19 @@ class BlobStorage {
     }
   }
 
+  async upload(filePath: string): Promise<string | null> {
+    const fileContent = await import("fs/promises").then((fs) =>
+      fs.readFile(filePath)
+    );
+    const fileName = filePath.split("/").pop()!;
+    const result = await this.storeVideoFile(
+      "general-upload",
+      fileContent,
+      fileName
+    );
+    return result.url;
+  }
+
   // Video File Storage
   async storeVideoFile(
     topic: string,
