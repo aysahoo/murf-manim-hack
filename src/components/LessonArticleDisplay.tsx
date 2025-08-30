@@ -110,9 +110,11 @@ const LessonArticleDisplay: React.FC<LessonArticleDisplayProps> = ({
     try {
       if (isPlaying) {
         audio.pause();
+        setIsPlaying(false);
       } else {
         setIsLoading(true);
         await audio.play();
+        setIsPlaying(true);
         setIsLoading(false);
       }
     } catch (error) {

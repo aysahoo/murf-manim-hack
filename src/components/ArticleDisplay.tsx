@@ -115,9 +115,11 @@ const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
     try {
       if (isPlaying) {
         audio.pause();
+        setIsPlaying(false);
       } else {
         setIsLoading(true);
         await audio.play();
+        setIsPlaying(true);
         setIsLoading(false);
       }
     } catch (error) {
@@ -302,8 +304,11 @@ const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
                 onClick={handleSeek}
               >
                 <div
-                  className="bg-gradient-to-r from-pink-500 to-pink-600 h-3 rounded-full transition-all duration-200 ease-out relative"
-                  style={{ width: `${progressPercentage}%` }}
+                  className="bg-gradient-to-r from-pink-500 to-pink-600 h-full rounded-full transition-all duration-200 ease-out relative overflow-hidden"
+                  style={{
+                    width: `${progressPercentage}%`,
+                    minWidth: progressPercentage > 0 ? "4px" : "0px",
+                  }}
                 >
                   {/* Progress indicator dot */}
                   <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg border-2 border-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
