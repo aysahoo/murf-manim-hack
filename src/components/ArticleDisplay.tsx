@@ -135,7 +135,7 @@ const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
     const clickX = e.clientX - rect.left;
     const percentage = clickX / rect.width;
     const newTime = percentage * duration;
-    
+
     audio.currentTime = newTime;
     setCurrentTime(newTime);
   };
@@ -186,7 +186,7 @@ const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
         <h1 className="text-3xl md:text-4xl font-serif font-medium text-black">
           {title}
         </h1>
-        
+
         {audioUrl && (
           <button
             onClick={toggleVoiceMode}
@@ -196,12 +196,7 @@ const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
                 : "bg-white/60 backdrop-blur-sm text-gray-700 hover:bg-white/80 border border-white/50"
             }`}
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
               <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
               <path d="M12 18v4" />
@@ -232,13 +227,20 @@ const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
             {/* Skip Backward */}
             <button
               onClick={() => skipTime(-10)}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-700 p-2 rounded-full transition-all duration-200"
+              className="bg-white/60 hover:bg-white/80 text-gray-700 p-3 rounded-full transition-all duration-200 border border-white/30 shadow-sm hover:shadow-md"
               title="Skip back 10 seconds"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
-                <text x="12" y="15" textAnchor="middle" fontSize="8" fill="currentColor">10</text>
-              </svg>
+              <div className="flex items-center gap-1">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+                </svg>
+                <span className="text-xs font-medium">10</span>
+              </div>
             </button>
 
             {/* Play/Pause */}
@@ -250,11 +252,21 @@ const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
               {isLoading ? (
                 <div className="animate-spin w-6 h-6 border-2 border-white border-t-transparent rounded-full"></div>
               ) : isPlaying ? (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
                   <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                 </svg>
               ) : (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
                   <path d="M8 5v14l11-7z" />
                 </svg>
               )}
@@ -263,29 +275,39 @@ const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
             {/* Skip Forward */}
             <button
               onClick={() => skipTime(10)}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-700 p-2 rounded-full transition-all duration-200"
+              className="bg-white/60 hover:bg-white/80 text-gray-700 p-3 rounded-full transition-all duration-200 border border-white/30 shadow-sm hover:shadow-md"
               title="Skip forward 10 seconds"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z"/>
-                <text x="12" y="15" textAnchor="middle" fontSize="8" fill="currentColor">10</text>
-              </svg>
+              <div className="flex items-center gap-1">
+                <span className="text-xs font-medium">10</span>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M12 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z" />
+                </svg>
+              </div>
             </button>
 
             {/* Progress Bar */}
             <div className="flex-1">
-              <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
-                <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration)}</span>
+              <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
+                <span className="font-medium">{formatTime(currentTime)}</span>
+                <span className="font-medium">{formatTime(duration)}</span>
               </div>
-              <div 
-                className="w-full bg-gray-200 rounded-full h-2 cursor-pointer"
+              <div
+                className="relative w-full bg-white/60 rounded-full h-3 cursor-pointer group border border-white/30 shadow-sm hover:shadow-md transition-all duration-200"
                 onClick={handleSeek}
               >
                 <div
-                  className="bg-pink-500 h-2 rounded-full transition-all duration-100"
+                  className="bg-gradient-to-r from-pink-500 to-pink-600 h-3 rounded-full transition-all duration-200 ease-out relative"
                   style={{ width: `${progressPercentage}%` }}
-                />
+                >
+                  {/* Progress indicator dot */}
+                  <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg border-2 border-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                </div>
               </div>
             </div>
           </div>
@@ -294,11 +316,11 @@ const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
           <div className="flex items-center justify-between">
             {/* Speed Control */}
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Speed:</span>
+              <span className="text-sm text-gray-600 font-medium">Speed:</span>
               <select
                 value={playbackRate}
                 onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
-                className="bg-white/60 border border-gray-300 rounded px-2 py-1 text-sm"
+                className="bg-white/60 border border-white/30 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500"
               >
                 <option value={0.5}>0.5x</option>
                 <option value={0.75}>0.75x</option>
@@ -310,19 +332,32 @@ const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
             </div>
 
             {/* Volume Control */}
-            <div className="flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-gray-600">
-                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            <div className="flex items-center gap-3">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="text-gray-600"
+              >
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
               </svg>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={volume}
-                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                className="w-20"
-              />
+              <div className="relative">
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={volume}
+                  onChange={(e) =>
+                    handleVolumeChange(parseFloat(e.target.value))
+                  }
+                  className="w-24 h-2 bg-white/60 rounded-full appearance-none cursor-pointer border border-white/30 shadow-sm hover:shadow-md transition-all duration-200 slider-thumb"
+                />
+                <div className="text-xs text-gray-500 mt-1 text-center">
+                  {Math.round(volume * 100)}%
+                </div>
+              </div>
             </div>
           </div>
 
@@ -357,11 +392,12 @@ const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
               {section.title}
             </h2>
             <div className="text-gray-800 leading-relaxed space-y-4">
-              {section.content.split('\n').map((paragraph, pIndex) => (
-                paragraph.trim() && (
-                  <p key={pIndex}>{paragraph.trim()}</p>
-                )
-              ))}
+              {section.content
+                .split("\n")
+                .map(
+                  (paragraph, pIndex) =>
+                    paragraph.trim() && <p key={pIndex}>{paragraph.trim()}</p>
+                )}
             </div>
           </motion.div>
         ))}
@@ -376,9 +412,7 @@ const ArticleDisplay: React.FC<ArticleDisplayProps> = ({
           <h2 className="text-2xl font-serif font-medium text-black mb-4">
             Conclusion
           </h2>
-          <p className="text-lg text-gray-800 leading-relaxed">
-            {conclusion}
-          </p>
+          <p className="text-lg text-gray-800 leading-relaxed">{conclusion}</p>
         </motion.div>
       </motion.div>
     </div>
