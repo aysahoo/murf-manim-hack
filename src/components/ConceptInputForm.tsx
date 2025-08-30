@@ -11,6 +11,7 @@ type ConceptInputFormProps = {
   onFocus: (focused: boolean) => void;
   onSubmit: () => void;
   mode?: "single" | "lessons";
+  placeholder?: string;
 };
 
 const ConceptInputForm: React.FC<ConceptInputFormProps> = ({
@@ -20,6 +21,7 @@ const ConceptInputForm: React.FC<ConceptInputFormProps> = ({
   onFocus,
   onSubmit,
   mode = "single",
+  placeholder,
 }) => {
   const isValid = inputValue.trim().length > 0;
 
@@ -66,6 +68,7 @@ const ConceptInputForm: React.FC<ConceptInputFormProps> = ({
           }}
           className="text-3xl md:text-5xl lg:text-6xl font-serif font-medium text-gray-900 tracking-tight bg-transparent border-none outline-none text-center w-full relative z-10"
           style={{ caretColor: "rgb(17 24 39)" }}
+          placeholder={placeholder}
         />
         {inputValue === "" && !isFocused && (
           <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
