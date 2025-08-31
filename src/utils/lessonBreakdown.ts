@@ -5,7 +5,7 @@ import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
 // Initialize the OpenRouter provider
 const openrouter = createOpenRouter({
-  apiKey: process.env.OPENROUTER_API_KEY || '',
+  apiKey: process.env.OPENROUTER_API_KEY || "",
 });
 
 // Schema for lesson breakdown
