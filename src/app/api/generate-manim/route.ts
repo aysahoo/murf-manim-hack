@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateLessonBreakdown } from "@/utils/lessonBreakdown";
-import { blobStorage } from "@/utils/blobStorage";
+
 import { executeCodeAndListFiles } from "@/utils/sandbox";
 import { generateVoiceNarration } from "@/utils/voiceNarration";
 import { validateAndFixManimCode } from "@/utils/structuredManimGenerator";
@@ -10,7 +10,7 @@ async function generateSingleVideo(topic: string, includeVoice: boolean) {
   console.log(`🎬 Starting single video generation for: ${topic}`);
 
   // 1. Generate a single, detailed "lesson"
-  const lessonBreakdown = await generateLessonBreakdown(topic, 1); // Force a single part
+  const lessonBreakdown = await generateLessonBreakdown(topic); // Generate lesson breakdown
   if (!lessonBreakdown || lessonBreakdown.lessons.length === 0) {
     throw new Error("Failed to generate script for the topic.");
   }

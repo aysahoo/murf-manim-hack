@@ -1,3 +1,5 @@
+import { translateArticle } from './translation';
+
 interface MurfTTSRequest {
   text: string;
   voiceId: string;
@@ -43,6 +45,8 @@ interface ArticleAudioOptions {
   pitch?: number;
   includeTitle?: boolean;
   pauseBetweenSections?: number; // seconds
+  targetLanguage?: string; // Language code for translation (e.g., 'es-ES')
+  translateFirst?: boolean; // Whether to translate content before generating audio
 }
 
 interface MurfVoice {
@@ -53,6 +57,92 @@ interface MurfVoice {
   gender: string;
   age: string;
   description: string;
+}
+
+// Default voice mapping for supported languages
+// Using known working voice IDs (starting with en-US-natalie as it's confirmed working)
+const DEFAULT_VOICE_MAPPING: { [key: string]: string } = {
+  'en-US': 'en-US-natalie',
+  'en-UK': 'en-US-natalie', // Fallback to working voice for now
+  'en-IN': 'en-US-natalie', // Fallback to working voice for now
+  'en-AU': 'en-US-natalie', // Fallback to working voice for now
+  'en-SCOTT': 'en-US-natalie', // Fallback to working voice for now
+  'es-MX': 'en-US-natalie', // Fallback to working voice for now
+  'es-ES': 'en-US-natalie', // Fallback to working voice for now
+  'fr-FR': 'en-US-natalie', // Fallback to working voice for now
+  'de-DE': 'en-US-natalie', // Fallback to working voice for now
+  'it-IT': 'en-US-natalie', // Fallback to working voice for now
+  'nl-NL': 'en-US-natalie', // Fallback to working voice for now
+  'pt-BR': 'en-US-natalie', // Fallback to working voice for now
+  'zh-CN': 'en-US-natalie', // Fallback to working voice for now
+  'ja-JP': 'en-US-natalie', // Fallback to working voice for now
+  'ko-KR': 'en-US-natalie', // Fallback to working voice for now
+  'hi-IN': 'en-US-natalie', // Fallback to working voice for now
+  'ta-IN': 'en-US-natalie', // Fallback to working voice for now
+  'bn-IN': 'en-US-natalie', // Fallback to working voice for now
+  'hr-HR': 'en-US-natalie', // Fallback to working voice for now
+  'sk-SK': 'en-US-natalie', // Fallback to working voice for now
+  'pl-PL': 'en-US-natalie', // Fallback to working voice for now
+  'el-GR': 'en-US-natalie', // Fallback to working voice for now
+};
+
+/**
+ * Get the best voice ID for a given language
+ * @param targetLanguage Language code (e.g., 'es-ES')
+ * @param availableVoices Optional list of available voices to choose from
+ * @returns Voice ID to use
+ */
+/**
+ * Get the best voice ID for a given language
+ * @param targetLanguage Language code (e.g., 'es-ES')
+ * @param availableVoices Optional list of available voices to choose from
+ * @returns Voice ID to use
+ */
+function getBestVoiceForLanguage(targetLanguage: string, availableVoices?: MurfVoice[]): string {
+  console.log(`getBestVoiceForLanguage called with: ${targetLanguage}`);
+  
+  // If we have available voices, try to find a match
+  if (availableVoices && availableVoices.length > 0) {
+    // Try exact language match first
+    const exactMatch = availableVoices.find(voice => 
+      voice.voiceId.toLowerCase().includes(targetLanguage.toLowerCase())
+    );
+    if (exactMatch) {
+      console.log(`Found exact match in available voices: ${exactMatch.voiceId}`);
+      return exactMatch.voiceId;
+    }
+
+    // Try language prefix match (e.g., 'es' for 'es-ES')
+    const langPrefix = targetLanguage.split('-')[0];
+    const prefixMatch = availableVoices.find(voice => 
+      voice.voiceId.toLowerCase().startsWith(langPrefix.toLowerCase() + '-')
+    );
+    if (prefixMatch) {
+      console.log(`Found prefix match: ${prefixMatch.voiceId}`);
+      return prefixMatch.voiceId;
+    }
+
+    // Try language in voice language field
+    const languageMatch = availableVoices.find(voice => 
+      voice.language && voice.language.toLowerCase().includes(langPrefix.toLowerCase())
+    );
+    if (languageMatch) {
+      console.log(`Found language match: ${languageMatch.voiceId}`);
+      return languageMatch.voiceId;
+    }
+  }
+
+  // First try exact mapping from our defaults
+  if (DEFAULT_VOICE_MAPPING[targetLanguage]) {
+    console.log(`Found exact mapping: ${targetLanguage} -> ${DEFAULT_VOICE_MAPPING[targetLanguage]}`);
+    return DEFAULT_VOICE_MAPPING[targetLanguage];
+  }
+
+  console.log(`No exact mapping found for ${targetLanguage}`);
+
+  // Fallback to English
+  console.log(`Using fallback voice: en-US-natalie`);
+  return 'en-US-natalie';
 }
 
 export async function generateArticleAudio(
@@ -68,33 +158,67 @@ export async function generateArticleAudio(
   audioLengthInSeconds: number;
   success: boolean;
   error?: string;
+  translationUsed?: boolean;
+  creditsUsed?: number;
 }> {
   try {
     const {
-      voiceId = 'en-US-natalie',
       rate = 0,
       pitch = 0,
       includeTitle = true,
-      pauseBetweenSections = 2
+      pauseBetweenSections = 2,
+      targetLanguage,
+      translateFirst = false,
+      voiceId = getBestVoiceForLanguage(targetLanguage || 'en-US')
     } = options;
+
+    console.log(`generateArticleAudio - targetLanguage: ${targetLanguage}, voiceId: ${voiceId}`);
+    console.log(`translateFirst: ${translateFirst}`);
+
+    let processedContent = articleContent;
+    let translationCreditsUsed = 0;
+    let translationUsed = false;
+
+    // Translate content if requested
+    if (translateFirst && targetLanguage) {
+      console.log(`Translating content to ${targetLanguage} before generating audio...`);
+      
+      const translationResult = await translateArticle(articleContent, targetLanguage);
+      
+      if (!translationResult.success) {
+        return {
+          audioUrl: '',
+          audioLengthInSeconds: 0,
+          success: false,
+          error: `Translation failed: ${translationResult.error}`,
+        };
+      }
+
+      if (translationResult.translatedContent) {
+        processedContent = translationResult.translatedContent;
+        translationCreditsUsed = translationResult.creditsUsed;
+        translationUsed = true;
+        console.log(`Translation completed using ${translationCreditsUsed} credits`);
+      }
+    }
 
     // Construct the full text for TTS
     let fullText = '';
     
     if (includeTitle) {
-      fullText += `${cleanTextForTTS(articleContent.title)}. [pause 3s] `;
+      fullText += `${cleanTextForTTS(processedContent.title)}. [pause 3s] `;
     }
     
-    fullText += `${cleanTextForTTS(articleContent.introduction)} [pause ${pauseBetweenSections}s] `;
+    fullText += `${cleanTextForTTS(processedContent.introduction)} [pause ${pauseBetweenSections}s] `;
     
-    articleContent.sections.forEach((section, index) => {
+    processedContent.sections.forEach((section, index) => {
       fullText += `${cleanTextForTTS(section.title)}. [pause 1s] ${cleanTextForTTS(section.content)}`;
-      if (index < articleContent.sections.length - 1) {
+      if (index < processedContent.sections.length - 1) {
         fullText += ` [pause ${pauseBetweenSections}s] `;
       }
     });
     
-    fullText += ` [pause ${pauseBetweenSections}s] ${cleanTextForTTS(articleContent.conclusion)}`;
+    fullText += ` [pause ${pauseBetweenSections}s] ${cleanTextForTTS(processedContent.conclusion)}`;
 
     console.log('Full text length:', fullText.length, 'characters');
 
@@ -119,7 +243,9 @@ export async function generateArticleAudio(
       return {
         audioUrl: audioResponse.audioFile,
         audioLengthInSeconds: audioResponse.audioLengthInSeconds,
-        success: true
+        success: true,
+        translationUsed,
+        creditsUsed: translationCreditsUsed
       };
     } else {
       // Text is too long, we need to split it
@@ -144,7 +270,9 @@ export async function generateArticleAudio(
       return {
         audioUrl: audioResponse.audioFile,
         audioLengthInSeconds: audioResponse.audioLengthInSeconds,
-        success: true
+        success: true,
+        translationUsed,
+        creditsUsed: translationCreditsUsed
       };
     }
 
@@ -258,6 +386,8 @@ export async function generateMurfTTS(request: MurfTTSRequest): Promise<MurfTTSR
     modelVersion: request.modelVersion,
     textLength: request.text.length
   });
+
+  console.log('Full request body:', JSON.stringify(request, null, 2));
 
   const response = await fetch('https://api.murf.ai/v1/speech/generate', {
     method: 'POST',
@@ -387,4 +517,99 @@ export function splitTextForTTS(text: string, maxLength: number = 2800): string[
   }
 
   return chunks.length > 0 ? chunks : ['Unable to process text.'];
+}
+
+/**
+ * Generate audio for an article in multiple languages
+ * @param articleContent The article content to generate audio for
+ * @param languages Array of language codes to generate audio for
+ * @param baseOptions Base audio options
+ * @returns Promise with audio URLs for each language
+ */
+export async function generateMultilingualArticleAudio(
+  articleContent: {
+    title: string;
+    introduction: string;
+    sections: Array<{ title: string; content: string }>;
+    conclusion: string;
+  },
+  languages: string[],
+  baseOptions: Omit<ArticleAudioOptions, 'targetLanguage' | 'translateFirst'> = {}
+): Promise<{
+  audioResults: Array<{
+    language: string;
+    audioUrl: string;
+    audioLengthInSeconds: number;
+    success: boolean;
+    error?: string;
+    creditsUsed?: number;
+  }>;
+  totalCreditsUsed: number;
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    const audioResults = [];
+    let totalCreditsUsed = 0;
+
+    // Get available voices to find appropriate voice for each language
+    const availableVoices = await getMurfVoices();
+
+    for (const targetLanguage of languages) {
+      console.log(`Generating audio for language: ${targetLanguage}`);
+
+      // Find a suitable voice for this language
+      let voiceId = baseOptions.voiceId;
+      
+      if (!voiceId) {
+        voiceId = getBestVoiceForLanguage(targetLanguage, availableVoices);
+        console.log(`Selected voice for ${targetLanguage}: ${voiceId}`);
+      }
+
+      const audioOptions: ArticleAudioOptions = {
+        ...baseOptions,
+        voiceId,
+        targetLanguage,
+        translateFirst: true,
+      };
+
+      const result = await generateArticleAudio(articleContent, audioOptions);
+
+      audioResults.push({
+        language: targetLanguage,
+        audioUrl: result.audioUrl,
+        audioLengthInSeconds: result.audioLengthInSeconds,
+        success: result.success,
+        error: result.error,
+        creditsUsed: result.creditsUsed || 0,
+      });
+
+      if (result.creditsUsed) {
+        totalCreditsUsed += result.creditsUsed;
+      }
+
+      // Add a small delay between requests to avoid rate limiting
+      if (languages.indexOf(targetLanguage) < languages.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+
+    const overallSuccess = audioResults.every(result => result.success);
+
+    return {
+      audioResults,
+      totalCreditsUsed,
+      success: overallSuccess,
+      error: overallSuccess ? undefined : 'Some audio generations failed',
+    };
+
+  } catch (error) {
+    console.error('Error generating multilingual audio:', error);
+    return {
+      audioResults: [],
+      totalCreditsUsed: 0,
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to generate multilingual audio',
+    };
+  }
 }
