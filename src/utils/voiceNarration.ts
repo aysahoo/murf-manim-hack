@@ -31,7 +31,7 @@ const MURF_API_CONFIG = {
   baseUrl: "https://api.murf.ai/v1",
   // Note: You'll need to add your Murf AI API key to environment variables
   apiKey: process.env.MURF_API_KEY || "",
-  defaultVoice: "en-US-natalie", // Default voice ID - Natalie supports Narration style
+  defaultVoice: "en-US-natalie", // Default voice ID - confirmed working
   defaultFormat: "mp3",
 };
 

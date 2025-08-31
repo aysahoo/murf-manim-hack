@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "motion/react";
 import VideoWithAudio from "./VideoWithAudio";
 import ArticleDisplay from "./ArticleDisplay";
@@ -74,17 +74,7 @@ const EnhancedLessonBreakdown: React.FC<EnhancedLessonBreakdownProps> = ({
   const currentLessonData = getCurrentLesson();
   const currentArticleData = getCurrentArticle();
 
-  // Auto-generate articles after lessons are loaded
-  useEffect(() => {
-    if (lessons.length > 0 && !articlesGenerated && !articleLoading) {
-      const timer = setTimeout(() => {
-        generateLessonArticles();
-      }, 3000); // Generate articles 3 seconds after lessons load
-      return () => clearTimeout(timer);
-    }
-  }, [lessons.length, articlesGenerated, articleLoading]);
-
-  const generateLessonArticles = async () => {
+  const generateLessonArticles = useCallback(async () => {
     setArticleLoading(true);
     try {
       const articlePromises = lessons.map(async (lesson) => {
@@ -125,7 +115,22 @@ const EnhancedLessonBreakdown: React.FC<EnhancedLessonBreakdownProps> = ({
     } finally {
       setArticleLoading(false);
     }
-  };
+  }, [lessons, topic]);
+
+  // Auto-generate articles after lessons are loaded
+  useEffect(() => {
+    if (lessons.length > 0 && !articlesGenerated && !articleLoading) {
+      const timer = setTimeout(() => {
+        generateLessonArticles();
+      }, 3000); // Generate articles 3 seconds after lessons load
+      return () => clearTimeout(timer);
+    }
+  }, [
+    lessons.length,
+    articlesGenerated,
+    articleLoading,
+    generateLessonArticles,
+  ]);
 
   return (
     <div className={`max-w-5xl mx-auto ${className}`}>

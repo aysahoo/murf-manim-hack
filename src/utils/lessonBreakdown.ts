@@ -34,8 +34,7 @@ const lessonBreakdownSchema = z.object({
  * Generates a structured lesson breakdown for any topic
  */
 export async function generateLessonBreakdown(
-  topic: string,
-  numLessons?: number
+  topic: string
 ): Promise<{
   lessons: Array<{
     part: number;

@@ -5,7 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import ShaderBackground from "../../../components/ShaderBackground";
 import SubmittedTopicTitle from "../../../components/SubmittedTopicTitle";
 import Navbar from "../../../components/Navbar";
-import ArticleDisplay from "../../../components/ArticleDisplay";
+import EnhancedArticleDisplay from "../../../components/EnhancedArticleDisplay";
 import LessonArticleDisplay from "../../../components/LessonArticleDisplay";
 import Footer from "../../../components/Footer";
 
@@ -19,7 +19,6 @@ interface Article {
     introduction: string;
     sections: ArticleSection[];
     conclusion: string;
-    audioUrl?: string;
 }
 
 interface LessonArticle extends Article {
@@ -67,8 +66,7 @@ const ArticleTopicPageContent = () => {
                                 topic: `${topic} - Part ${partNumber}`,
                                 length: "short",
                                 style: "educational",
-                                includeAudio: true,
-                                voiceId: "en-US-natalie"
+                                includeAudio: false, // Let individual components handle audio
                             }),
                         });
 
@@ -80,7 +78,6 @@ const ArticleTopicPageContent = () => {
                                 introduction: data.introduction,
                                 sections: data.sections,
                                 conclusion: data.conclusion,
-                                audioUrl: data.audioUrl,
                             } as LessonArticle;
                         }
                         return null;
@@ -101,8 +98,7 @@ const ArticleTopicPageContent = () => {
                             topic,
                             length: "medium",
                             style: "educational",
-                            includeAudio: true,
-                            voiceId: "en-US-natalie"
+                            includeAudio: false, // Let EnhancedArticleDisplay handle audio generation
                         }),
                     });
 
@@ -115,7 +111,6 @@ const ArticleTopicPageContent = () => {
                             introduction: data.introduction,
                             sections: data.sections,
                             conclusion: data.conclusion,
-                            audioUrl: data.audioUrl,
                         });
                     } else {
                         throw new Error("Failed to generate article");
@@ -187,12 +182,11 @@ const ArticleTopicPageContent = () => {
 
                             {/* Single Article Mode */}
                             {mode === "single" && article && !loading && (
-                                <ArticleDisplay
+                                <EnhancedArticleDisplay
                                     title={article.title}
                                     introduction={article.introduction}
                                     sections={article.sections}
                                     conclusion={article.conclusion}
-                                    audioUrl={article.audioUrl}
                                     className="w-full"
                                 />
                             )}

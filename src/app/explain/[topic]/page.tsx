@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, Suspense, useCallback } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import ShaderBackground from "../../../components/ShaderBackground";
 import SubmittedTopicTitle from "../../../components/SubmittedTopicTitle";
 import Navbar from "../../../components/Navbar";
 import VideoWithAudio from "../../../components/VideoWithAudio";
-import LessonBreakdown from "../../../components/LessonBreakdown";
+
 import EnhancedLessonBreakdown from "../../../components/EnhancedLessonBreakdown";
 import ArticleDisplay from "../../../components/ArticleDisplay";
 import Footer from "../../../components/Footer";
@@ -34,17 +34,10 @@ interface Article {
   audioUrl?: string;
 }
 
-interface LessonArticle extends Article {
-  part: number;
-}
-
 const TopicPageContent = () => {
   const params = useParams<{ topic: string }>();
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") || "single";
-
-  // Auto-generate articles after videos load
-  const [showArticles, setShowArticles] = useState<boolean>(false);
 
   // Single video mode state
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -186,24 +179,7 @@ const TopicPageContent = () => {
     }
   }, [topic, mode]);
 
-  // Auto-generate articles for single mode after video is loaded
-  useEffect(() => {
-    if (
-      !loading &&
-      !articleLoading &&
-      !article &&
-      mode === "single" &&
-      videoUrl
-    ) {
-      // Auto-generate article after a short delay
-      const timer = setTimeout(() => {
-        generateArticle();
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [loading, mode, videoUrl, article, articleLoading]);
-
-  const generateArticle = async () => {
+  const generateArticle = useCallback(async () => {
     setArticleLoading(true);
     try {
       const res = await fetch("/api/generate-article", {
@@ -236,7 +212,24 @@ const TopicPageContent = () => {
     } finally {
       setArticleLoading(false);
     }
-  };
+  }, [topic]);
+
+  // Auto-generate articles for single mode after video is loaded
+  useEffect(() => {
+    if (
+      !loading &&
+      !articleLoading &&
+      !article &&
+      mode === "single" &&
+      videoUrl
+    ) {
+      // Auto-generate article after a short delay
+      const timer = setTimeout(() => {
+        generateArticle();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, mode, videoUrl, article, articleLoading, generateArticle]);
 
   const regenerateVideo = async () => {
     window.location.reload(); // Simple refresh to regenerate
