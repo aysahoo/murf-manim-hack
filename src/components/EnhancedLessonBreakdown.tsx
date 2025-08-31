@@ -91,12 +91,12 @@ const EnhancedLessonBreakdown: React.FC<EnhancedLessonBreakdownProps> = ({
         const res = await fetch("/api/generate-article", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             topic: `${topic} - Part ${lesson.part}`,
             length: "short",
             style: "educational",
             includeAudio: true,
-            voiceId: "en-US-natalie"
+            voiceId: "en-US-natalie",
           }),
         });
 
@@ -115,7 +115,9 @@ const EnhancedLessonBreakdown: React.FC<EnhancedLessonBreakdownProps> = ({
       });
 
       const results = await Promise.all(articlePromises);
-      const validArticles = results.filter((article): article is LessonArticle => article !== null);
+      const validArticles = results.filter(
+        (article): article is LessonArticle => article !== null
+      );
       setLessonArticles(validArticles);
       setArticlesGenerated(true);
     } catch (error) {
@@ -176,9 +178,9 @@ const EnhancedLessonBreakdown: React.FC<EnhancedLessonBreakdownProps> = ({
             <div className="w-full h-96 bg-gray-200 rounded-xl flex items-center justify-center">
               <div className="text-center">
                 <div className="text-lg text-gray-600 mb-2">
-                  {currentLessonData.executionSuccess === false ? 
-                    "Video generation failed" : 
-                    "No video available"}
+                  {currentLessonData.executionSuccess === false
+                    ? "Video generation failed"
+                    : "No video available"}
                 </div>
                 <div className="text-sm text-gray-500">
                   Part {currentLesson} of {lessons.length}
@@ -207,7 +209,9 @@ const EnhancedLessonBreakdown: React.FC<EnhancedLessonBreakdownProps> = ({
         {articleLoading && !currentArticleData && (
           <div className="text-center text-gray-700 py-8">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-pink-500 mx-auto"></div>
-            <p className="mt-2 text-sm">Generating article for Part {currentLesson}...</p>
+            <p className="mt-2 text-sm">
+              Generating article for Part {currentLesson}...
+            </p>
           </div>
         )}
 
@@ -226,7 +230,9 @@ const EnhancedLessonBreakdown: React.FC<EnhancedLessonBreakdownProps> = ({
 
         {!articleLoading && !currentArticleData && articlesGenerated && (
           <div className="text-center py-8">
-            <p className="text-gray-600">Article not available for this lesson</p>
+            <p className="text-gray-600">
+              Article not available for this lesson
+            </p>
           </div>
         )}
       </motion.div>
@@ -281,7 +287,7 @@ const EnhancedLessonBreakdown: React.FC<EnhancedLessonBreakdownProps> = ({
               >
                 {lesson.part}
                 {/* Article indicator */}
-                {lessonArticles.find(a => a.part === lesson.part) && (
+                {lessonArticles.find((a) => a.part === lesson.part) && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-pink-500 rounded-full"></div>
                 )}
               </button>

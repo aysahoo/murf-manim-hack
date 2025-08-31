@@ -188,7 +188,13 @@ const TopicPageContent = () => {
 
   // Auto-generate articles for single mode after video is loaded
   useEffect(() => {
-    if (!loading && !articleLoading && !article && mode === "single" && videoUrl) {
+    if (
+      !loading &&
+      !articleLoading &&
+      !article &&
+      mode === "single" &&
+      videoUrl
+    ) {
       // Auto-generate article after a short delay
       const timer = setTimeout(() => {
         generateArticle();
@@ -203,12 +209,12 @@ const TopicPageContent = () => {
       const res = await fetch("/api/generate-article", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          topic, 
+        body: JSON.stringify({
+          topic,
           length: "medium",
           style: "educational",
           includeAudio: true,
-          voiceId: "en-US-natalie"
+          voiceId: "en-US-natalie",
         }),
       });
 
@@ -245,7 +251,6 @@ const TopicPageContent = () => {
             topic={topic}
             mode={mode as "single" | "lessons"}
           />
-
 
           <div className="mt-6 flex justify-center px-6">
             <div className="max-w-5xl w-full">

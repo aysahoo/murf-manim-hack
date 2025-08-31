@@ -28,7 +28,9 @@ async function generateSingleVideo(topic: string, includeVoice: boolean) {
     console.error("Manim execution failed:", executionResult.error);
     console.error("Execution logs:", executionResult.execution.logs);
     throw new Error(
-      `Manim execution failed. Error: ${executionResult.error || "No video produced."}`
+      `Manim execution failed. Error: ${
+        executionResult.error || "No video produced."
+      }`
     );
   }
   console.log("📹 Video file generated:", executionResult.videoFiles[0].path);

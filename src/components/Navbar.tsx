@@ -1,5 +1,6 @@
 import React from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface NavbarProps {
   showBackButton?: boolean;
@@ -65,7 +66,7 @@ const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center gap-3">
             {!hideCreateButtons && (
               <>
-                <a
+                <Link
                   href="/explain"
                   className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center transition-colors hover:bg-gray-800 cursor-pointer shadow-lg"
                   title="Create Video"
@@ -80,8 +81,8 @@ const Navbar: React.FC<NavbarProps> = ({
                   >
                     <path d="M8 5v14l11-7z" />
                   </svg>
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/article"
                   className="w-8 h-8 bg-white/60 backdrop-blur-sm text-gray-700 rounded-full flex items-center justify-center transition-colors hover:bg-white/80 cursor-pointer shadow-lg border border-white/50"
                   title="Create Article"
@@ -104,10 +105,10 @@ const Navbar: React.FC<NavbarProps> = ({
                     <line x1="16" y1="17" x2="8" y2="17" />
                     <polyline points="10,9 9,9 8,9" />
                   </svg>
-                </a>
+                </Link>
               </>
             )}
-            <a
+            <Link
               href="/library"
               className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center transition-colors hover:bg-gray-800 cursor-pointer shadow-lg"
               title="View Library"
@@ -129,7 +130,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 <rect x="14" y="14" width="7" height="7" />
                 <rect x="3" y="14" width="7" height="7" />
               </svg>
-            </a>
+            </Link>
           </div>
         </div>
       </div>
