@@ -152,51 +152,21 @@ const TopicPageContent = () => {
           const data = await res.json();
           console.log("API response data:", data);
 
-          // Check if we have video files regardless of success flag
-          if (data.videoFiles && data.videoFiles.length > 0) {
-            const videoFile = data.videoFiles[0];
-            const fileName = videoFile.path.split("/").pop();
-            const videoUrl = `/videos/${fileName}`;
+          if (data.success && data.videoUrl) {
+            console.log("Setting video URL:", data.videoUrl);
+            setVideoUrl(data.videoUrl);
 
-            console.log("Setting video URL:", videoUrl);
-            setVideoUrl(videoUrl);
-
-            // Set audio data if available
             if (data.voiceData) {
               setAudioUrl(data.voiceData.audioUrl);
               console.log("Setting audio URL:", data.voiceData.audioUrl);
             }
-
             setLoading(false);
             return;
+          } else {
+            // If nothing works, set an error
+            console.warn("No video generated or API call failed.", data.error);
+            setError(data.error || "Video generation failed.");
           }
-
-          // If no video files, try using the videoUrls
-          if (data.videoUrls && data.videoUrls.length > 0) {
-            console.log("Using videoUrls:", data.videoUrls[0]);
-            setVideoUrl(data.videoUrls[0]);
-
-            // Set audio data if available
-            if (data.voiceData) {
-              setAudioUrl(data.voiceData.audioUrl);
-              console.log("Setting audio URL:", data.voiceData.audioUrl);
-            }
-
-            setLoading(false);
-            return;
-          }
-
-          // If nothing works, use fallback
-          console.warn("No video generated, using fallback");
-          const fallbackVideos = [
-            "/videos/SimpleCircleAnimation.mp4",
-            "/videos/GravityScene.mp4",
-            "/videos/EntropyScene.mp4",
-          ];
-          const randomFallback =
-            fallbackVideos[Math.floor(Math.random() * fallbackVideos.length)];
-          setVideoUrl(randomFallback);
-          setError("Video generation had issues. Using fallback video.");
         }
       } catch (error) {
         console.error("Error generating content:", error);
@@ -204,17 +174,7 @@ const TopicPageContent = () => {
         if (mode === "lessons") {
           setError("Failed to generate lesson breakdown.");
         } else {
-          setError("Failed to generate video. Using fallback.");
-
-          // Use fallback video for single mode
-          const fallbackVideos = [
-            "/videos/SimpleCircleAnimation.mp4",
-            "/videos/GravityScene.mp4",
-            "/videos/EntropyScene.mp4",
-          ];
-          const randomFallback =
-            fallbackVideos[Math.floor(Math.random() * fallbackVideos.length)];
-          setVideoUrl(randomFallback);
+          setError("Failed to generate video.");
         }
       } finally {
         setLoading(false);

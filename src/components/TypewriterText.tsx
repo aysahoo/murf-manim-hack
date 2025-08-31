@@ -2,12 +2,10 @@
 
 import React, { useEffect, useState, useMemo } from "react";
 import { motion } from "motion/react";
-
 const TypewriterText: React.FC = () => {
   const topics = useMemo(() => [
     "quantum physics",
     "machine learning",
-    "calculus",
     "neural networks",
     "thermodynamics",
     "organic chemistry",

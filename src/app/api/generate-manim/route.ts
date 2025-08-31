@@ -1,75 +1,77 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  generateStructuredManimCode,
-  validateAndFixManimCode,
-} from "@/utils/structuredManimGenerator";
-import { convertEscapedNewlines } from "@/utils/formatManimCode";
+import { generateLessonBreakdown } from "@/utils/lessonBreakdown";
+import { blobStorage } from "@/utils/blobStorage";
 import { executeCodeAndListFiles } from "@/utils/sandbox";
 import { generateVoiceNarration } from "@/utils/voiceNarration";
-// Removed cache import - now using blob storage directly
+import { validateAndFixManimCode } from "@/utils/structuredManimGenerator";
+import { convertEscapedNewlines } from "@/utils/formatManimCode";
+
+async function generateSingleVideo(topic: string, includeVoice: boolean) {
+  console.log(`🎬 Starting single video generation for: ${topic}`);
+
+  // 1. Generate a single, detailed "lesson"
+  const lessonBreakdown = await generateLessonBreakdown(topic, 1); // Force a single part
+  if (!lessonBreakdown || lessonBreakdown.lessons.length === 0) {
+    throw new Error("Failed to generate script for the topic.");
+  }
+  const lesson = lessonBreakdown.lessons[0];
+  console.log("📝 Generated script:", lesson.script.substring(0, 150) + "...");
+
+  // 2. Validate and prepare Manim code
+  const validatedCode = validateAndFixManimCode(lesson.manim_code);
+  const manimCode = convertEscapedNewlines(validatedCode);
+  console.log("🤖 Manim code prepared.");
+
+  // 3. Execute Manim code to generate video
+  const executionResult = await executeCodeAndListFiles(manimCode);
+  if (executionResult.error || executionResult.videoFiles.length === 0) {
+    console.error("Manim execution failed:", executionResult.error);
+    console.error("Execution logs:", executionResult.execution.logs);
+    throw new Error(
+      `Manim execution failed. Error: ${executionResult.error || "No video produced."}`
+    );
+  }
+  console.log("📹 Video file generated:", executionResult.videoFiles[0].path);
+
+  // 4. The video is already uploaded by executeCodeAndListFiles, so we just get the URL.
+  const videoUrl = executionResult.videoFiles[0].path;
+  console.log("☁️ Video URL retrieved:", videoUrl);
+
+  let voiceData = null;
+  if (includeVoice) {
+    console.log("🗣️ Generating voice narration...");
+    voiceData = await generateVoiceNarration(topic, lesson.script, {
+      style: "professional",
+    });
+    console.log("🔊 Voice narration generated.");
+  }
+
+  return {
+    topic,
+    manimCode,
+    videoUrl,
+    voiceData,
+    success: true,
+  };
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const { topic, includeVoice = true, voiceOptions } = await request.json();
+    const { topic, includeVoice = true } = await request.json();
 
     if (!topic) {
       return NextResponse.json({ error: "Topic is required" }, { status: 400 });
     }
 
-    // Storage is handled automatically by blob storage
-    const manimCode = await generateStructuredManimCode(topic);
-    const validatedCode = validateAndFixManimCode(manimCode);
-    const multilineCode = convertEscapedNewlines(validatedCode);
-    //generated Manim Code
-    console.log(multilineCode);
-    // Execute the generated Manim code in the sandbox and list files
-    console.log("Executing Manim code in sandbox...");
-    const result = await executeCodeAndListFiles(multilineCode);
+    const result = await generateSingleVideo(topic, includeVoice);
 
-    // Use blob URLs for the extracted videos (they're already public URLs)
-    let videoUrls: string[] = [];
-    if (result.videoFiles && result.videoFiles.length > 0) {
-      videoUrls = result.videoFiles.map((videoFile) => videoFile.path); // videoFile.path is now a blob URL
-    }
-
-    // Generate Murf AI voice narration if requested
-    let voiceData = null;
-    if (includeVoice) {
-      try {
-        console.log("Generating Murf AI voice narration...");
-        voiceData = await generateVoiceNarration(
-          topic,
-          multilineCode,
-          voiceOptions
-        );
-        if (voiceData.audioUrl) {
-          console.log(
-            "Murf AI voice generation successful:",
-            voiceData.audioUrl
-          );
-        }
-      } catch (voiceError) {
-        console.error("Error generating voice narration:", voiceError);
-        console.log("Continuing without voice narration");
-        voiceData = null;
-      }
-    }
-
-    return NextResponse.json({
-      topic,
-      manimCode: multilineCode,
-      generationMethod: result.success ? "structured" : "sandbox_error",
-      execution: result.execution,
-      sandboxFiles: result.files,
-      videoFiles: result.videoFiles || [],
-      videoUrls,
-      voiceData,
-      success: true,
-    });
+    return NextResponse.json(result);
   } catch (error) {
-    console.error("Error generating Manim code:", error);
+    console.error("Error in single video generation:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "An unknown error occurred.";
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
+      { success: false, error: errorMessage },
       { status: 500 }
     );
   }

@@ -62,7 +62,7 @@ const ExplainPage: React.FC = () => {
                 if (trimmed) {
                   // Redirect to loading screen with topic and mode in query params
                   router.push(
-                    `/loading?topic=${encodeURIComponent(trimmed)}&mode=${mode}`
+                    `/explain/${encodeURIComponent(trimmed)}?mode=${mode}`
                   );
                 }
               }}
