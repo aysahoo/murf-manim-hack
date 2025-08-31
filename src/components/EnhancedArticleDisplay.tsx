@@ -249,12 +249,12 @@ export default function EnhancedArticleDisplay({
   };
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`max-w-4xl mx-auto space-y-6 ${className}`}>
       {/* Audio Generation Panel */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
+        className="bg-gray-100/60 backdrop-blur-sm rounded-lg shadow-sm p-6 border border-white/50"
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900">
@@ -263,20 +263,20 @@ export default function EnhancedArticleDisplay({
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setIsMultilingualMode(false)}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                 !isMultilingualMode
-                  ? "bg-pink-100 text-pink-700 border border-pink-200"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-black text-white shadow-lg"
+                  : "bg-gray-100/60 text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
               }`}
             >
               Single Language
             </button>
             {/* <button
               onClick={() => setIsMultilingualMode(true)}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                 isMultilingualMode
-                  ? 'bg-pink-100 text-pink-700 border border-pink-200'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-black text-white shadow-lg'
+                  : 'bg-gray-100/60 text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
               }`}
             >
               Multilingual
@@ -305,10 +305,10 @@ export default function EnhancedArticleDisplay({
               <button
                 onClick={generateSingleAudio}
                 disabled={isGeneratingAudio}
-                className={`w-full px-4 py-2 rounded-md font-medium transition-colors ${
+                className={`w-full px-4 py-3 rounded-full font-medium transition-all duration-300 shadow-lg ${
                   isGeneratingAudio
                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-pink-600 text-white hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
+                    : "bg-black text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                 }`}
               >
                 {isGeneratingAudio ? (
@@ -368,12 +368,12 @@ export default function EnhancedArticleDisplay({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md"
+            className="mt-4 p-4 bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-lg shadow-sm"
           >
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg
-                  className="h-5 w-5 text-red-400"
+                  className="h-5 w-5 text-red-500"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -385,7 +385,7 @@ export default function EnhancedArticleDisplay({
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-red-800">{error}</p>
+                <p className="text-sm text-red-800 font-medium">{error}</p>
               </div>
             </div>
           </motion.div>
@@ -397,11 +397,11 @@ export default function EnhancedArticleDisplay({
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-blue-50 border border-blue-200 rounded-lg p-4"
+          className="bg-blue-50/80 backdrop-blur-sm border border-blue-200/50 rounded-lg p-4 shadow-sm"
         >
           <div className="flex items-center">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-3"></div>
-            <span className="text-blue-800 text-sm font-medium">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-3"></div>
+            <span className="text-blue-900 text-sm font-medium">
               Translating to {getLanguageName(selectedLanguage)}...
             </span>
           </div>
@@ -412,11 +412,11 @@ export default function EnhancedArticleDisplay({
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-red-50 border border-red-200 rounded-lg p-4"
+          className="bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-lg p-4 shadow-sm"
         >
           <div className="flex items-center">
             <svg
-              className="w-5 h-5 text-red-500 mr-2"
+              className="w-5 h-5 text-red-600 mr-3"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -426,7 +426,7 @@ export default function EnhancedArticleDisplay({
                 clipRule="evenodd"
               />
             </svg>
-            <span className="text-red-800 text-sm font-medium">
+            <span className="text-red-900 text-sm font-medium">
               Translation Error: {translationError}
             </span>
           </div>
@@ -437,11 +437,11 @@ export default function EnhancedArticleDisplay({
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-green-50 border border-green-200 rounded-lg p-4"
+          className="bg-green-50/80 backdrop-blur-sm border border-green-200/50 rounded-lg p-4 shadow-sm"
         >
           <div className="flex items-center">
             <svg
-              className="w-5 h-5 text-green-500 mr-2"
+              className="w-5 h-5 text-green-600 mr-3"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -451,7 +451,7 @@ export default function EnhancedArticleDisplay({
                 clipRule="evenodd"
               />
             </svg>
-            <span className="text-green-800 text-sm font-medium">
+            <span className="text-green-900 text-sm font-medium">
               Content translated to {getLanguageName(selectedLanguage)}
             </span>
           </div>
